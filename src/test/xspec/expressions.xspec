@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+               xmlns:a="http://nwalsh.com/ns/xslt/analysis"
+               xmlns:m="http://nwalsh.com/ns/xslt/modes"
+               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+               stylesheet="../../main/xslt/xsltexplorer.xsl">
+
+<x:scenario label="When analyzing a template">
+  <x:context mode="m:analyze">
+    <xsl:template>
+      <xsl:sequence select="a:f()"/>
+    </xsl:template>
+  </x:context>
+  <x:expect label="expect select attributes to be parsed for expressions">
+    <a:template>
+      <a:function-call name="a:f"
+                       ref="{{http://nwalsh.com/ns/xslt/analysis}}f#0"/>
+    </a:template>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing a template">
+  <x:context mode="m:analyze">
+    <xsl:template>
+      <xsl:sequence select="$a + 3"/>
+    </xsl:template>
+  </x:context>
+  <x:expect label="expect select attributes to be parsed for expressions">
+    <a:template>
+      <a:variable-ref name="a"
+                       ref="{{}}a"/>
+    </a:template>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When parsing a function call">
+  <x:context mode="m:analyze">
+    <xsl:template>
+      <xsl:sequence select="a:f($a,3)"/>
+    </xsl:template>
+  </x:context>
+  <x:expect label="expect variable references to be preserved">
+    <a:template>
+      <a:function-call name="a:f"
+                       ref="{{http://nwalsh.com/ns/xslt/analysis}}f#2"/>
+      <a:variable-ref name="a"
+                       ref="{{}}a"/>
+    </a:template>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing a template">
+  <x:context mode="m:analyze">
+    <xsl:template>
+      <xsl:choose>
+        <xsl:when select="a:f()"/>
+        <xsl:when select="$a:var = 3"/>
+      </xsl:choose>
+    </xsl:template>
+  </x:context>
+  <x:expect label="expect select attributes to be parsed for expressions">
+    <a:template>
+      <a:function-call name="a:f"
+                       ref="{{http://nwalsh.com/ns/xslt/analysis}}f#0"/>
+      <a:variable-ref name="a:var"
+                       ref="{{http://nwalsh.com/ns/xslt/analysis}}var"/>
+    </a:template>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing a template">
+  <x:context mode="m:analyze">
+    <xsl:template>
+      <xsl:if select="a:f()"/>
+    </xsl:template>
+  </x:context>
+  <x:expect label="expect select attributes to be parsed for expressions">
+    <a:template>
+      <a:function-call name="a:f"
+                       ref="{{http://nwalsh.com/ns/xslt/analysis}}f#0"/>
+    </a:template>
+  </x:expect>
+</x:scenario>
+
+</x:description>

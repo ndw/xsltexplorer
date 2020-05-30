@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+               xmlns:a="http://nwalsh.com/ns/xslt/analysis"
+               xmlns:m="http://nwalsh.com/ns/xslt/modes"
+               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+               stylesheet="../../main/xslt/xsltexplorer.xsl">
+
+<x:import href="stylesheets.xspec"/>
+<x:import href="templates.xspec"/>
+<x:import href="variables.xspec"/>
+<x:import href="expressions.xspec"/>
+
+</x:description>

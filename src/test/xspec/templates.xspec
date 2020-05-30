@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+               xmlns:a="http://nwalsh.com/ns/xslt/analysis"
+               xmlns:m="http://nwalsh.com/ns/xslt/modes"
+               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+               stylesheet="../../main/xslt/xsltexplorer.xsl">
+
+<x:scenario label="When analyzing a named xsl:template">
+  <x:context mode="m:analyze">
+    <xsl:template name="test"/>
+  </x:context>
+  <x:expect label="expect the name on the template">
+    <a:template name="test" id="{{}}test"/>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing an xsl:template without a name">
+  <x:context mode="m:analyze">
+    <xsl:template/>
+  </x:context>
+  <x:expect label="expect the name to be absent the template">
+    <a:template/>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing an xsl:template without a mode">
+  <x:context mode="m:analyze">
+    <xsl:template mode="testmode"/>
+  </x:context>
+  <x:expect label="expect the mode on the template">
+    <a:template mode="{{}}testmode"/>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing an xsl:template without an explicit mode">
+  <x:context mode="m:analyze">
+    <xsl:stylesheet default-mode="a:testdef">
+      <xsl:template/>
+    </xsl:stylesheet>
+  </x:context>
+  <x:expect label="expect the default mode to be used">
+    <a:stylesheet uri="...">
+      <a:template mode="{{http://nwalsh.com/ns/xslt/analysis}}testdef"/>
+    </a:stylesheet>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing a match xsl:template">
+  <x:context mode="m:analyze">
+    <xsl:template match="a[parent::foo]|b"/>
+  </x:context>
+  <x:expect label="expect the simplified match on the template">
+    <a:template match="a|b"/>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing a named with a match xsl:template">
+  <x:context mode="m:analyze">
+    <xsl:template name="test" match="a[parent::foo]|b"/>
+  </x:context>
+  <x:expect label="expect the name and simplified match on the template">
+    <a:template name="test" id="{{}}test" match="a|b"/>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing a call-template">
+  <x:context mode="m:analyze">
+    <xsl:template>
+      <xsl:call-template name="x:foo" xmlns:x="http://example.com/"/>
+    </xsl:template>
+  </x:context>
+  <x:expect label="expect the call-template to be preserved">
+    <a:template>
+      <a:call-template ref="{{http://example.com/}}foo"
+                       name="x:foo"/>
+    </a:template>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing an xsl:template without a priority">
+  <x:context mode="m:analyze">
+    <xsl:template priority="75"/>
+  </x:context>
+  <x:expect label="expect the priority to be preserved">
+    <a:template priority="75"/>
+  </x:expect>
+</x:scenario>
+
+</x:description>

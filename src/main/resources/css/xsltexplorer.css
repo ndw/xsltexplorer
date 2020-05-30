@@ -1,0 +1,137 @@
+/* DocBook.css */
+
+:root {
+    --table-border-style: 1px solid black;
+    --numbered-separator-style: 1px solid #dfdfdf;
+    --numbered-number-color: #dfdfdf;
+    --numbered-background-color: #f0f0f0;
+    --verbatim-odd-background-color: #f4f4f4;
+    --verbatim-even-background-color: inherit;
+    --sidebar-background-color: #f0f0f0;
+    --border-grey: #afafaf;
+    --body-font: "Noto Serif", serif;
+    --title-font: "Noto Sans", sans-serif;
+    --mono-font: "B612 Mono", monospace;
+    --revadded-before: "<ins>";
+    --revadded-after: "</ins>";
+    --revchanged-before: "<chg>";
+    --revchanged-after: "</chg>";
+    --revdeleted-before: "<del>";
+    --revdeleted-after: "</del>";
+    max-width: 70rem;
+    background-color: #fffff8;
+}
+
+html {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: var(--body-font);
+    line-height: 1.75rem;
+    font-size: 13.5pt;
+}
+
+body {
+    min-height: 100%;
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+
+.toc ul {
+    list-style: none;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 0;
+}
+
+.toc ul ul {
+    padding-left: 2rem;
+}
+
+a, a:visited {
+    color: blue;
+    text-decoration: none;
+}
+
+div.stylesheet + div {
+}
+
+div.stylesheet div.stylesheet {
+    padding-left: 1rem;
+    border-left: 2px solid var(--border-grey);
+    border-top-left-radius: 1rem;
+    border-bottom-left-radius: 1rem;
+}
+
+.instructions > div {
+    display: none;
+    margin-top: 1em;
+    border-left: 1px solid var(--border-grey);
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+}
+
+.forceshow div {
+    display: block;
+}
+
+.body {
+    padding-left: 2rem;
+}
+
+.title {
+    padding-left: 1rem;
+    font-weight: bold;
+    font-family: var(--title-font);
+}
+
+span.unused,
+span.onlyused,
+span.shadow {
+    border-bottom: 1px solid #ff0000;
+}
+
+div.unused,
+div.onlyused {
+    background-color: #ffdfaf;
+}
+
+div.shadows {
+    background-color: #ffdfdf;
+}
+
+.toc span,
+.module-title,
+.unused-functions,
+.onlyused-functions,
+.onlyused-variables,
+.unused-templates,
+.unused-variables,
+.unused-params,
+.unused-vars,
+.shadow-variables {
+    cursor: pointer;
+}
+
+.closed::before {
+    content: "⏵";
+}
+
+.open::before {
+    content: "⏷";
+}
+
+.toc > ul {
+    display: none;
+}
+

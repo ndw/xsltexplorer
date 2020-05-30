@@ -1,0 +1,211 @@
+plugins {
+  id "java"
+  id 'com.github.eerohele.saxon-gradle' version '0.9.0-beta1'
+  id "de.undercouch.download" version "4.0.4"
+}
+
+sourceSets { }
+
+import com.github.eerohele.SaxonXsltTask
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+configurations.all {
+  resolutionStrategy {
+    force 'xml-apis:xml-apis:1.4.01'
+  }
+}
+
+dependencies {
+  implementation (
+    [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion],
+  )
+}
+
+class CheckTextFile extends DefaultTask {
+  @Input
+  String checkFile = null
+
+  @TaskAction
+  def docheck() {
+    def pass = true
+    new File(checkFile).eachLine { line ->
+      if (line.endsWith("failed") && !line.equals("0 failed")) {
+        pass = false
+      }
+      println(line)
+    }
+    if (!pass) {
+      throw new GradleException("Failing tests!")
+    }
+  }
+}
+
+def gitRef() {
+  def ref = ""
+  def proc = "git rev-parse --short --verify HEAD".execute()
+  proc.in.eachLine { line ->
+    ref = line
+  }
+  proc.err.eachLine { line ->
+    println(line)
+  }
+  proc.waitFor()
+  ref
+}
+
+def EXCP="${projectDir}/buildSrc/build/classes/java/main"
+configurations.compileClasspath.each { it ->
+  EXCP += ":" + it
+}
+
+task configureEnvironment() {
+  def envVars = [:]
+  envVars['TEST_DIR'] = buildDir
+  tasks.withType(Exec) {
+    environment << envVars
+  }
+}
+
+task downloadXSpec(type: Download) {
+  src "https://github.com/xspec/xspec/archive/v${xspecVersion}.zip"
+  dest file("${buildDir}/xspec-${xspecVersion}.zip")
+  doFirst {
+    mkdir(buildDir)
+  }
+}
+downloadXSpec.onlyIf {
+  !file("${buildDir}/xspec-${xspecVersion}.zip").exists()
+}
+
+task unzipXSpec(type: Copy, dependsOn: ['downloadXSpec']) {
+  def zipFile = file("${buildDir}/xspec-${xspecVersion}.zip")
+  def outputDir = buildDir
+  from zipTree(zipFile)
+  into outputDir
+}
+unzipXSpec.onlyIf {
+  !file("${buildDir}/xspec-${xspecVersion}/README.md").exists()
+}
+
+task setupXSpec(type: Copy, dependsOn: ['unzipXSpec']) {
+  from "src/test/resources/xspec"
+  into "${buildDir}/xspec-${xspecVersion}/bin"
+  include "xspec.sh"
+}
+
+// ============================================================
+
+// Generate tasks to format each test document
+fileTree(dir: "src/test/resources/xslt", include: "*.xsl").each { xsl ->
+  // Work out the base filename of the test
+  def base = xsl.toString()
+  def pos = base.indexOf("/resources/xslt/")
+  if (pos > 0) {
+    base = base.substring(pos+16)
+      .replace("/", "_")
+      .replace(".xsl", "")
+  }
+
+  // It's very frustrating that these can't use the SaxonXsltTask
+  // because the stylesheet doesn't exist at configuration time
+  // and so gradle throws an error. *grump*
+
+  def outName = base + ".html"
+  Task t = task "${outName}"(type: Exec,
+                        dependsOn: ['copyResources', 'makeXslt']) {
+    inputs.files fileTree(dir: "src/main/xslt")
+    outputs.file("${buildDir}/${outName}")
+    commandLine "java", "-cp", EXCP, "net.sf.saxon.Transform",
+                xsl.toString(),
+                "-xsl:${buildDir}/xslt/xsltexplorer.xsl",
+                "-o:${buildDir}/${outName}"
+  }
+
+  def expName = base + ".expected"
+  t = task "${expName}"(type: Exec,
+                        dependsOn: ['copyResources', 'makeXslt']) {
+    inputs.files fileTree(dir: "src/main/xslt")
+    outputs.file("src/test/resources/expected/${base}.html")
+    commandLine "java", "-cp", EXCP, "net.sf.saxon.Transform",
+                xsl.toString(),
+                "-xsl:${buildDir}/xslt/xsltexplorer.xsl",
+                "-o:src/test/resources/expected/${base}.html"
+  }
+}
+
+// Generate tasks to run each set of XSpec tests
+fileTree(dir: "src/test/xspec").each { xspec ->
+  // Work out the base filename of the test
+  def base = xspec.toString()
+  def pos = base.indexOf("/test/xspec/")
+  if (pos > 0) {
+    base = base.substring(pos+12)
+    base = base.replace(".xspec", "")
+  }
+
+  def taskname = base.replace("-", "_") + ".xspec"
+  Task t = task "${taskname}"(type: Exec, dependsOn: ['setupXSpec']) {
+    inputs.files fileTree(dir: "src/main/xslt")
+    inputs.files fileTree(dir: "src/test/xspec")
+    inputs.files fileTree(dir: "src/test/resources")
+    outputs.files(fileTree(buildDir) {
+      include base + "-result.xml"
+    })
+    commandLine "${buildDir}/xspec-${xspecVersion}/bin/xspec.sh",
+                xspec.toString()
+  }
+}
+
+// ============================================================
+
+// self-reference
+task ouroboros(type: Exec, dependsOn: ['copyResources', 'makeXslt']) {
+  inputs.files fileTree(dir: "src/main/xslt")
+  outputs.file("${buildDir}/xsltexplorer.html")
+  commandLine "java", "-cp", EXCP, "net.sf.saxon.Transform",
+              "${buildDir}/xslt/xsltexplorer.xsl",
+              "-xsl:${buildDir}/xslt/xsltexplorer.xsl",
+              "-o:${buildDir}/xsltexplorer.html"
+}
+
+task copyResources(type: Copy) {
+  from "src/main/resources"
+  include "css/**"
+  include "js/**"
+  into "${buildDir}"
+  doFirst {
+    mkdir "${buildDir}"
+  }
+}
+
+task makeVersion(type: SaxonXsltTask) {
+  inputs.files "tools/version.xsl"
+  outputs.file("${buildDir}/xslt/VERSION.xsl")
+  input "tools/version.xsl"
+  stylesheet "tools/version.xsl"
+  output "${buildDir}/xslt/VERSION.xsl"
+  parameters(
+    "title": xsltExplorerTitle,
+    "version": xsltExplorerVersion,
+    "gitref": gitRef()
+  )
+  doFirst {
+    mkdir "${buildDir}/xslt"
+  }
+}
+
+task makeXslt(type: Copy, dependsOn: ['makeVersion']) {
+  outputs.file("${buildDir}/xslt/xsltexplorer.xsl")
+  from "src/main/xslt"
+  into "${buildDir}/xslt"
+}
+
+task helloWorld() {
+  doLast {
+    println('Hello, world.')
+  }
+}
