@@ -2,19 +2,20 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:a="http://nwalsh.com/ns/xslt/analysis"
                 xmlns:f="http://nwalsh.com/ns/xslt/functions"
+                xmlns:fp="http://nwalsh.com/ns/xslt/functions/private"
                 xmlns:h="http://www.w3.org/1999/xhtml"
                 xmlns:m="http://nwalsh.com/ns/xslt/modes"
                 xmlns:t="http://nwalsh.com/ns/xslt/templates"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns="http://www.w3.org/1999/xhtml"
                 default-mode="m:summarize"
-                exclude-result-prefixes="a f h m t xs"
+                exclude-result-prefixes="a f fp h m t xs"
                 version="3.0">
 
 <xsl:param name="css" select="'css/xsltexplorer.css'"/>
 <xsl:param name="js" select="'js/xsltexplorer.js'"/>
 <xsl:param name="title"
-           select="'XSLT Explorer: ' || tokenize(base-uri(/*), '/')[last()]"/>
+           select="$TITLE || ': ' || tokenize(base-uri(/*), '/')[last()]"/>
 
 <xsl:key name="vars" match="a:stylesheet/a:variable" use="@id"/>
 <xsl:key name="vrefs" match="a:variable-ref" use="@ref"/>
@@ -32,6 +33,7 @@
       <title>
         <xsl:sequence select="$title"/>
       </title>
+      <meta name="viewport" content="width=device-width,initial-scale=1" />
       <link href="https://fonts.googleapis.com/css?family=B612+Mono" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css?family=Noto+Serif" rel="stylesheet" />
@@ -41,7 +43,8 @@
             content="{format-dateTime(adjust-dateTime-to-timezone(current-dateTime(), $Z),
                                       '[Y0001]-[M01]-[D01]T[H01]:[m01]:[s01]Z')}"/>
       <meta name="generator" content="{$TITLE} {$VERSION} / {$VERHASH}"/>
-      <script src="https://kit.fontawesome.com/27862f3f23.js" crossorigin="anonymous"/>
+      <link href="css/prism.css" rel="stylesheet" />
+      <script src="js/prism.js"></script>
     </head>
     <body>
       <main>
@@ -55,198 +58,219 @@
 <xsl:template match="a:stylesheet">
   <xsl:variable name="stylesheet" select="."/>
 
+  <xsl:variable name="depth" select="count(ancestor::a:stylesheet)+1"/>
+  <xsl:variable name="hsize" select="min(($depth,4))"/>
+
   <div class="{local-name(.)}" id="{f:generate-id(.)}">
-    <xsl:variable name="depth" select="count(ancestor::a:stylesheet)+1"/>
-    <xsl:element name="h{min(($depth,4))}"
-                 namespace="http://www.w3.org/1999/xhtml">
-      <xsl:if test="parent::a:stylesheet">
-        <xsl:attribute name="class" select="'module-title closed'"/>
-      </xsl:if>
+    <xsl:element name="h{$hsize}" namespace="http://www.w3.org/1999/xhtml">
       <xsl:choose>
         <xsl:when test="empty(parent::*)">
           <xsl:sequence select="$title"/>
+          <xsl:message select="'Summarizing …'"/>
         </xsl:when>
         <xsl:otherwise>
           <xsl:value-of select="tokenize(resolve-uri(@href, base-uri(/*)), '/')[last()]"/>
+          <xsl:message select="'Summarizing', @href/string(), '…'"/>
         </xsl:otherwise>
       </xsl:choose>
     </xsl:element>
 
-    <xsl:if test="not(parent::*)">
-      <xsl:variable name="now" select="adjust-dateTime-to-timezone(current-dateTime(), $Z)"/>
-      <p>
-        <xsl:text>Created at </xsl:text>
-        <xsl:sequence select="format-dateTime($now, '[H01]:[m01]')"/>
-        <xsl:text> on </xsl:text>
-        <xsl:sequence select="format-dateTime($now, '[D01] [MNn,*-3] [Y0001]')"/>
-        <xsl:text>.</xsl:text>
-      </p>
-    </xsl:if>
+    <xsl:variable name="imports" select="if (parent::*)
+                                         then ./a:stylesheet
+                                         else .//a:stylesheet"/>
+    <xsl:variable name="vars" select=".//a:variable[parent::a:stylesheet
+                                                    and @class='variable']"/>
+    <xsl:variable name="params" select=".//a:variable[parent::a:stylesheet
+                                                      and @class='param']"/>
+    <xsl:variable name="templates" select=".//a:template[parent::a:stylesheet]"/>
+    <xsl:variable name="functions" select=".//a:function[parent::a:stylesheet]"/>
 
-    <xsl:variable name="imports"
-                  select="if (parent::*)
-                          then ./a:stylesheet
-                          else .//a:stylesheet"/>
-    <xsl:variable name="vars"
-                  select="descendant-or-self::a:stylesheet/a:variable[@class='variable']"/>
-    <xsl:variable name="params"
-                  select="descendant-or-self::a:stylesheet/a:variable[@class='param']"/>
-    <xsl:variable name="templates"
-                  select="descendant-or-self::a:stylesheet/a:template"/>
-    <xsl:variable name="functions"
-                  select="descendant-or-self::a:stylesheet/a:function"/>
-
-    <xsl:variable name="unused-variables" as="element(a:variable)*">
+    <xsl:variable name="vp-unused" as="element(a:variable)*">
       <xsl:for-each select="a:variable">
-        <xsl:if test="empty(key('vrefs', @id, root($stylesheet)))">
+        <xsl:variable name="this" select="."/>
+        <xsl:variable name="used-by" as="element()*">
+          <xsl:for-each select="key('vrefs', @id)">
+            <xsl:variable name="var" select="f:variable(., @ref)"/>
+            <xsl:if test="exists($var) and $var is $this">
+              <xsl:sequence select="."/>
+            </xsl:if>
+          </xsl:for-each>
+        </xsl:variable>
+        <xsl:if test="empty($used-by)">
           <xsl:sequence select="."/>
         </xsl:if>
       </xsl:for-each>
     </xsl:variable>
 
-    <xsl:variable name="shadow-variables" as="element(a:variable)*">
+    <xsl:variable name="vp-shadows"
+                  select="a:variable[f:variable(., @id/string())]"/>
+
+    <xsl:variable name="vp-elsewhere" as="element(a:variable)*">
       <xsl:for-each select="a:variable">
-        <xsl:if test="f:variable(., @id/string())">
+        <xsl:variable name="used-in"
+                      select="key('vrefs', @id, root($stylesheet))/parent::a:stylesheet
+                              union ()"/>
+        <xsl:if test="count($used-in) = 1 and exists($used-in except parent::*)">
           <xsl:sequence select="."/>
         </xsl:if>
       </xsl:for-each>
     </xsl:variable>
 
-    <xsl:variable name="variables-only-used-elsewhere" as="element(a:variable)*">
-      <xsl:for-each select="a:variable">
-        <xsl:variable name="usedby"
-                      select="key('vrefs', @id, root($stylesheet))"/>
-        <xsl:variable name="usedin"
-                      select="f:used-in(., $usedby)"/>
-        <xsl:if test="count($usedin) = 1 and exists($usedin except parent::*)">
-          <xsl:sequence select="."/>
-        </xsl:if>
-      </xsl:for-each>
-    </xsl:variable>
-
-    <xsl:variable name="var-notes" as="element(h:span)*">
-      <xsl:if test="$unused-variables[@class = 'variable']">
-        <span class="unused-variables unused">
-          <xsl:sequence select="count($unused-variables[@class = 'variable']),
-                                'unused'"/>
+    <xsl:variable name="variable-notes" as="element(h:span)*">
+      <xsl:variable name="v-unused" select="$vp-unused[@class='variable']"/>
+      <xsl:variable name="v-shadows" select="$vp-shadows[@class='variable']"/>
+      <xsl:variable name="v-elsewhere" select="$vp-elsewhere[@class='variable']"/>
+      <xsl:if test="$v-unused">
+        <span class="variable unused">
+          <xsl:sequence select="count($v-unused) || ' unused'"/>
         </span>
       </xsl:if>
-      <xsl:if test="$shadow-variables[@class = 'variable']">
-        <span class="shadow-variables shadow">
-          <xsl:sequence select="count($shadow-variables[@class = 'variable']),
-                                'shadowing'"/>
+      <xsl:if test="$v-shadows">
+        <span class="variable shadows">
+          <xsl:sequence select="count($v-shadows) || ' shadows'"/>
         </span>
       </xsl:if>
-      <xsl:if test="$variables-only-used-elsewhere[@class = 'variable']">
-        <span class="onlyused-variables onlyused">
-          <xsl:sequence
-              select="count($variables-only-used-elsewhere[@class = 'variable']),
-                     'used in only one other module'"/>
+      <xsl:if test="$v-elsewhere">
+        <span class="variable elsewhere">
+          <xsl:sequence select="count($v-elsewhere) || ' used only in other modules'"/>
         </span>
       </xsl:if>
     </xsl:variable>
 
-    <xsl:variable name="unused-templates" as="element(a:template)*">
-      <xsl:for-each select="a:template[@name]">
-        <xsl:if test="empty(key('trefs', @id, root($stylesheet)))">
-          <xsl:sequence select="."/>
-        </xsl:if>
-      </xsl:for-each>
+    <xsl:variable name="param-notes" as="element(h:span)*">
+      <xsl:variable name="p-unused" select="$vp-unused[@class='param']"/>
+      <xsl:variable name="p-shadows" select="$vp-shadows[@class='param']"/>
+      <xsl:variable name="p-elsewhere" select="$vp-elsewhere[@class='param']"/>
+
+      <xsl:if test="$p-unused">
+        <span class="param unused">
+          <xsl:sequence select="count($p-unused) || ' unused'"/>
+        </span>
+      </xsl:if>
+      <xsl:if test="$p-shadows">
+        <span class="param shadows">
+          <xsl:sequence select="count($p-shadows) || ' shadows'"/>
+        </span>
+      </xsl:if>
+      <xsl:if test="$p-elsewhere">
+        <span class="param elsewhere">
+          <xsl:sequence select="count($p-elsewhere) || ' used only in other modules'"/>
+        </span>
+      </xsl:if>
     </xsl:variable>
 
-    <xsl:variable name="unused-functions" as="element(a:function)*">
-      <xsl:for-each select="a:function">
-        <xsl:if test="empty(key('fcalls', @id, root($stylesheet)))">
-          <xsl:sequence select="."/>
-        </xsl:if>
-      </xsl:for-each>
+    <xsl:variable name="template-notes" as="element(h:span)*">
+      <xsl:variable name="templates-unused" as="element(a:template)*">
+        <xsl:for-each select="a:template[@name]">
+          <xsl:variable name="this" select="."/>
+          <xsl:variable name="used-in" as="element()*">
+            <xsl:for-each select="key('trefs', @id, root($stylesheet))">
+              <xsl:variable name="t" select="f:template(., @ref/string())"/>
+              <xsl:if test="exists($t) and $t is $this">
+                <xsl:sequence select="$this"/>
+              </xsl:if>
+            </xsl:for-each>
+          </xsl:variable>
+          <xsl:if test="empty($used-in)">
+            <xsl:sequence select="."/>
+          </xsl:if>
+        </xsl:for-each>
+      </xsl:variable>
+
+      <xsl:variable name="template-shadows"
+                    select="a:template[@name and f:template-shadows(., @id/string())]"/>
+
+      <xsl:variable name="elsewhere-templates" as="element(a:template)*">
+        <xsl:for-each select="a:template[@name]">
+          <xsl:variable name="this" select="."/>
+          <xsl:variable name="used-in" as="element()*">
+            <xsl:for-each select="key('trefs', @id, root($stylesheet))">
+              <xsl:variable name="t" select="f:template(., @ref/string())"/>
+              <xsl:if test="exists($t) and $t is $this">
+                <xsl:sequence select="$this/ancestor::a:stylesheet[1]"/>
+              </xsl:if>
+            </xsl:for-each>
+          </xsl:variable>
+          <xsl:if test="count($used-in) = 1 and exists($used-in except parent::*)">
+            <xsl:sequence select="."/>
+          </xsl:if>
+        </xsl:for-each>
+      </xsl:variable>
+
+      <xsl:if test="$templates-unused">
+        <span class="template unused">
+          <xsl:sequence select="count($templates-unused) || ' unused'"/>
+        </span>
+      </xsl:if>
+      <xsl:if test="$template-shadows">
+        <span class="template shadows">
+          <xsl:sequence select="count($template-shadows) || ' shadows'"/>
+        </span>
+      </xsl:if>
+      <xsl:if test="$elsewhere-templates">
+        <span class="template elsewhere">
+          <xsl:sequence select="count($elsewhere-templates) || ' used only in other modules'"/>
+        </span>
+      </xsl:if>
     </xsl:variable>
 
-    <xsl:variable name="functions-only-used-elsewhere" as="element(a:function)*">
-      <xsl:for-each select="a:function">
-        <xsl:variable name="callers"
-                      select="key('fcalls', @id, root($stylesheet))"/>
-        <xsl:variable name="usedin"
-                      select="f:used-in(., $callers)"/>
-        <xsl:if test="count($usedin) = 1 and exists($usedin except parent::*)">
-          <xsl:sequence select="."/>
-        </xsl:if>
-      </xsl:for-each>
+    <xsl:variable name="function-notes" as="element(h:span)*">
+      <xsl:variable name="functions-unused"
+                    select="a:function[empty(key('fcalls', @id, root($stylesheet)))]"/>
+      <xsl:variable name="elsewhere-functions" as="element(a:function)*">
+        <xsl:for-each select="a:function">
+          <xsl:variable name="used-in"
+                        select="key('fcalls', @id, root($stylesheet))/ancestor::a:stylesheet[1]
+                                union ()"/>
+          <xsl:if test="count($used-in) = 1 and exists($used-in except parent::*)">
+            <xsl:sequence select="."/>
+          </xsl:if>
+        </xsl:for-each>
+      </xsl:variable>
+      <xsl:if test="$functions-unused">
+        <span class="function unused">
+          <xsl:sequence select="count($functions-unused) || ' unused'"/>
+        </span>
+      </xsl:if>
+      <!-- FIXME: shadows -->
+      <xsl:if test="$elsewhere-functions">
+        <span class="function elsewhere">
+          <xsl:sequence select="count($elsewhere-functions) || ' used only in other modules'"/>
+        </span>
+      </xsl:if>
     </xsl:variable>
-
 
     <xsl:variable name="summary" as="element()*">
       <xsl:if test="$imports">
-        <span a-type="stylesheet">
-          <xsl:sequence select="count($imports), 'imports'"/>
+        <span>
+          <xsl:sequence select="count($imports) || ' imports'"/>
         </span>
       </xsl:if>
+
       <xsl:if test="$templates">
-        <span a-type="template">
-          <xsl:sequence select="count($templates), 'templates'"/>
-          <xsl:if test="$unused-templates">
-            <xsl:text> (</xsl:text>
-            <span class="unused-templates unused">
-              <xsl:sequence select="count($unused-templates), 'unused'"/>
-            </span>
-            <xsl:text>)</xsl:text>
-          </xsl:if>
+        <span>
+          <xsl:sequence select="count($templates) || ' templates'"/>
+          <xsl:sequence select="f:notes($template-notes)"/>
         </span>
       </xsl:if>
+
       <xsl:if test="$functions">
-        <span a-type="function">
+        <span>
           <xsl:sequence select="count($functions), 'functions'"/>
-          <xsl:if test="$unused-functions or $functions-only-used-elsewhere">
-            <xsl:text> (</xsl:text>
-            <xsl:if test="$unused-functions">
-              <span class="unused-functions unused">
-                <xsl:sequence select="count($unused-functions), 'unused'"/>
-              </span>
-            </xsl:if>
-            <xsl:if test="$functions-only-used-elsewhere">
-              <xsl:if test="$unused-functions">, </xsl:if>
-              <span class="onlyused-functions onlyused">
-                <xsl:sequence select="count($functions-only-used-elsewhere), 'used in only one other module'"/>
-              </span>
-            </xsl:if>
-            <xsl:text>)</xsl:text>
-          </xsl:if>
+          <xsl:sequence select="f:notes($function-notes)"/>
         </span>
       </xsl:if>
+
       <xsl:if test="$vars">
-        <span a-type="variable">
+        <span>
           <xsl:sequence select="count($vars), 'variables'"/>
-          <xsl:if test="$var-notes">
-            <xsl:text> (</xsl:text>
-            <xsl:for-each select="$var-notes">
-              <xsl:if test="position() gt 1">, </xsl:if>
-              <xsl:sequence select="."/>
-            </xsl:for-each>
-            <xsl:text>)</xsl:text>
-          </xsl:if>
+          <xsl:sequence select="f:notes($variable-notes)"/>
         </span>
       </xsl:if>
       <xsl:if test="$params">
         <span a-type="param">
           <xsl:sequence select="count($params), 'parameters'"/>
-          <xsl:if test="$unused-variables[@class = 'param']
-                        or $shadow-variables[@class = 'param']">
-            <xsl:text> (</xsl:text>
-            <xsl:if test="$unused-variables[@class = 'param']">
-              <span class="unused-params unused">
-                <xsl:sequence select="count($unused-variables[@class = 'param']),
-                                      'unused'"/>
-              </span>
-            </xsl:if>
-            <xsl:if test="$shadow-variables[@class = 'param']">
-              <xsl:if test="$unused-variables[@class = 'param']">, </xsl:if>
-              <span class="shadow-params shadow">
-                <xsl:sequence select="count($shadow-variables[@class = 'param']),
-                                      'shadowing'"/>
-              </span>
-            </xsl:if>
-            <xsl:text>)</xsl:text>
-          </xsl:if>
+          <xsl:sequence select="f:notes($param-notes)"/>
         </span>
       </xsl:if>
     </xsl:variable>
@@ -262,44 +286,157 @@
 
     <xsl:if test="not(parent::*) and a:stylesheet">
       <div class="toc">
-        <span class="closed">Table of Contents</span>
+        <span class="closed">Table of Imports</span>
         <xsl:apply-templates select="." mode="m:toc"/>
       </div>
+
+      <xsl:variable name="list" select="//a:template[@name]"/>
+      <xsl:if test="$list">
+        <div class="lot">
+          <span class="closed">List of Templates</span>
+          <dl class="columns">
+            <xsl:for-each select="$list">
+              <xsl:sort select="@id"/>
+              <dt>
+                <xsl:apply-templates select="." mode="m:reference"/>
+              </dt>
+            </xsl:for-each>
+          </dl>
+        </div>
+      </xsl:if>            
+
+      <xsl:variable name="list" select="//a:function"/>
+      <xsl:if test="$list">
+        <div class="lof">
+          <span class="closed">List of Functions</span>
+          <dl class="columns">
+            <xsl:for-each select="$list">
+              <xsl:sort select="@id"/>
+              <dt>
+                <xsl:apply-templates select="." mode="m:reference"/>
+              </dt>
+            </xsl:for-each>
+          </dl>
+        </div>
+      </xsl:if>            
     </xsl:if>
 
     <xsl:apply-templates select="a:stylesheet"/>
 
-    <div class="instructions{if (parent::*) then () else ' forceshow'}">
-      <xsl:apply-templates select="a:* except a:stylesheet"/>
+    <div class="instructions">
+      <div class="title closed">Instructions</div>
+      <div class="body">
+        <xsl:apply-templates select="a:* except a:stylesheet"/>
+      </div>
     </div>
+
+    <xsl:if test="string($source-listings) = ('1','true','yes')">
+      <div class="source-code">
+        <div class="title closed">Source code</div>
+        <div class="body">
+          <div>
+            <xsl:if test="@uri">
+              <xsl:try>
+                <xsl:variable name="code" select="unparsed-text(@uri)"/>
+                <table>
+                  <tr>
+                    <td valign="top" align="right">
+                      <pre class="fake-prism">
+                        <xsl:for-each select="tokenize($code,'&#10;')">
+                          <span id="line-{generate-id($stylesheet)}-{position()}">
+                            <xsl:choose>
+                              <xsl:when test="position() eq 1 or (position() mod 5 = 0)">
+                                <xsl:sequence select="position()"/>
+                              </xsl:when>
+                              <xsl:otherwise>
+                                <span class="lno">
+                                  <xsl:sequence select="position()"/>
+                                </span>
+                              </xsl:otherwise>
+                            </xsl:choose>
+                          </span>
+                          <xsl:text>&#10;</xsl:text>
+                        </xsl:for-each>
+                      </pre>
+                    </td>
+                    <td valign="top">
+                      <pre>
+                        <code class="language-xml">
+                          <xsl:sequence select="$code"/>
+                        </code>
+                      </pre>
+                    </td>
+                  </tr>
+                </table>
+                <xsl:catch>
+                  <xsl:sequence select="()"/>
+                </xsl:catch>
+              </xsl:try>
+            </xsl:if>
+          </div>
+        </div>
+      </div>
+    </xsl:if>
+
+    <xsl:if test="not(parent::*)">
+      <xsl:variable name="now" select="adjust-dateTime-to-timezone(current-dateTime(), $Z)"/>
+      <div class="details">
+        <p>
+          <xsl:text>Generated by </xsl:text>
+          <xsl:sequence select="$TITLE"/>
+          <xsl:text> version </xsl:text>
+          <span title="git hash: {$VERHASH}">
+            <xsl:sequence select="$VERSION"/>
+          </span>
+          <xsl:text> at </xsl:text>
+          <xsl:sequence select="format-dateTime($now, '[H01]:[m01]')"/>
+          <xsl:text> on </xsl:text>
+          <xsl:sequence select="format-dateTime($now, '[D01] [MNn,*-3] [Y0001]')"/>
+          <xsl:text>.</xsl:text>
+        </p>
+        <p>
+          <xsl:text>Source: </xsl:text>
+          <xsl:sequence select="@uri/string()"/>
+        </p>
+      </div>
+    </xsl:if>
   </div>
 </xsl:template>
 
 <xsl:template match="a:function">
-  <xsl:variable name="fdefs"
-                select="key('fnoarity', @noarity-id)"/>
+  <xsl:variable name="used-by" as="element()*">
+    <xsl:for-each select="key('fcalls', @id)">
+      <xsl:sequence select="ancestor::*[parent::a:stylesheet][1]"/>
+    </xsl:for-each>
+  </xsl:variable>
 
-  <xsl:variable name="calls" select="f:calls-functions(.)"/>
+  <!-- remove dups -->
+  <xsl:variable name="used-by" select="$used-by union ()"/>
 
-  <xsl:variable name="callers" as="element()*"
-                select="key('fcalls', @id)/ancestor::*[parent::a:stylesheet][1]"/>
-  <xsl:variable name="caller-ids" select="($callers except .) ! f:generate-id(.)"/>
+  <xsl:variable name="used-by-modules"
+                select="$used-by/parent::* union ()"/>
 
-  <xsl:variable name="usedin" select="f:used-in(., $callers)"/>
-  <xsl:variable name="onlyin"
-                select="count($usedin) = 1 and exists($usedin except parent::*)"/>
+  <xsl:variable name="used-only-elsewhere"
+                select="count($used-by-modules) = 1
+                        and not(parent::* is $used-by-modules)"/>
 
-  <div class="{local-name(.)}{
-              if (empty($callers)) then ' not-used' else ()
-              }{
-              if ($onlyin) then ' only-used' else ()
-              }"
-       id="{f:generate-id(.)}">
+  <xsl:variable name="fdefs" select="key('fnoarity', @noarity-id)"/>
+
+  <xsl:variable name="classes" as="xs:string+">
+    <xsl:sequence select="'instruction'"/>
+    <xsl:sequence select="local-name(.)"/>
+    <xsl:sequence select="if (empty($used-by)) then 'unused' else ()"/>
+    <xsl:sequence select="if ($used-only-elsewhere) then 'elsewhere' else ()"/>
+  </xsl:variable>
+
+  <div id="{f:generate-id(.)}"
+       class="{string-join($classes, ' ')}">
     <div class="title">
+      <xsl:sequence select="f:line-link(.)"/>
       <xsl:text>Function </xsl:text>
       <xsl:sequence select="substring-before(@name/string(), '#')"/>
       <xsl:if test="count($fdefs) gt 1">
-        <sup><xsl:sequence select="substring-after(@name/string(), '#')"/></sup>
+        <xsl:sequence select="'#' || substring-after(@name/string(), '#')"/>
       </xsl:if>
       <xsl:text>(</xsl:text>
       <xsl:for-each select="a:param">
@@ -313,42 +450,44 @@
       </xsl:for-each>
       <xsl:text>)</xsl:text>
 
-      <xsl:if test="$calls = .">
+      <xsl:if test="@as">
+        <xsl:sequence select="' as ' || @as"/>
+      </xsl:if>
+
+      <xsl:if test=". intersect $used-by">
         <xsl:text> </xsl:text>
-        <span class="recursive" title="Recursive function">
-          <i class="fa fa-sync"/>
-        </span>
+        <span class="recursive" title="Recursive function">♻</span>
       </xsl:if>
     </div>
 
-    <div class="body">
-      <xsl:call-template name="t:uses"/>
-      <xsl:call-template name="t:calls-functions">
-        <xsl:with-param name="calls" select="$calls except ."/>
+    <div class="props">
+      <xsl:call-template name="t:variables-referenced"/>
+      <xsl:call-template name="t:function-calls">
+        <xsl:with-param name="calls" select="$used-by/self::a:function except ."/>
       </xsl:call-template>
-      <xsl:call-template name="t:calls-templates"/>
+      <xsl:call-template name="t:template-calls"/>
 
-      <xsl:choose>
-        <xsl:when test="$callers">
-          <xsl:text>Used by: </xsl:text>
-          <xsl:for-each select="distinct-values($caller-ids)">
-            <xsl:variable name="id" select="."/>
-            <xsl:if test="position() gt 1">, </xsl:if>
-            <xsl:apply-templates
-                select="$callers[f:generate-id(.) = $id][1]" mode="m:reference"/>
-          </xsl:for-each>
-        </xsl:when>
-        <xsl:otherwise>
-          <div class="usedby unused">
-            <xsl:text>Unused</xsl:text>
-          </div>
-        </xsl:otherwise>
-      </xsl:choose>
+      <div class="used-by">
+        <xsl:choose>
+          <xsl:when test="$used-by">
+            <span class="marker"></span>
+            <xsl:text>Used by: </xsl:text>
+            <xsl:sequence select="f:reference-list($used-by)"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <span class="marker">☞</span>
+            <span class="unused">Unused</span>
+          </xsl:otherwise>
+        </xsl:choose>
+      </div>
 
-      <xsl:if test="$usedin except parent::*">
-        <div class="usedin{if ($onlyin) then ' onlyused' else ()}">
+      <xsl:if test="$used-by-modules except parent::*">
+        <div class="used-in">
+          <span class="marker" title="Only used in one other module">
+            <xsl:if test="$used-only-elsewhere">☝</xsl:if>
+          </span>
           <xsl:text>Used in: </xsl:text>
-          <xsl:for-each select="$usedin except parent::*">
+          <xsl:for-each select="$used-by-modules">
             <xsl:if test="position() gt 1">, </xsl:if>
             <a href="#{f:generate-id(.)}">
               <xsl:sequence select="@href/string()"/>
@@ -361,10 +500,10 @@
 </xsl:template>
 
 <xsl:template match="a:variable">
+  <xsl:variable name="this" select="."/>
   <xsl:variable name="id" select="@id/string()"/>
 
-  <xsl:variable name="this" select="."/>
-  <xsl:variable name="usedby" as="element()*">
+  <xsl:variable name="used-by" as="element()*">
     <xsl:for-each select="key('vrefs', @id)">
       <xsl:variable name="var" select="f:variable(., @ref)"/>
       <xsl:if test="exists($var) and $var is $this">
@@ -373,68 +512,72 @@
     </xsl:for-each>
   </xsl:variable>
 
-  <xsl:variable name="usedby-ids" select="$usedby ! f:generate-id(.)"/>
+  <!-- remove dups -->
+  <xsl:variable name="used-by" select="$used-by union ()"/>
 
-  <xsl:variable name="usedby" as="element()*">
-    <xsl:for-each select="distinct-values($usedby-ids)">
-      <xsl:variable name="id" select="."/>
-      <xsl:sequence select="$usedby[f:generate-id(.) = $id][1]"/>
-    </xsl:for-each>
+  <xsl:variable name="used-by-modules"
+                select="$used-by/parent::* union ()"/>
+
+  <xsl:variable name="used-only-elsewhere"
+                select="count($used-by-modules) = 1
+                        and not(parent::* is $used-by-modules)"/>
+
+  <xsl:variable name="shadows" select="f:variable(., @id/string())"/>
+
+  <xsl:variable name="classes" as="xs:string+">
+    <xsl:sequence select="'instruction'"/>
+    <xsl:sequence select="@class/string()"/>
+    <xsl:sequence select="if ($shadows) then 'shadows' else ()"/>
+    <xsl:sequence select="if (empty($used-by)) then 'unused' else ()"/>
+    <xsl:sequence select="if ($used-only-elsewhere) then 'elsewhere' else ()"/>
   </xsl:variable>
 
-  <xsl:variable name="usedin" select="f:used-in(., $usedby)"/>
-  <xsl:variable name="onlyin"
-                select="count($usedin) = 1 and exists($usedin except parent::*)"/>
-
-  <div class="{if (@class) then @class/string() else local-name(.)
-              } {if (empty($usedby)) then 'not-used' else ()
-              } {if (f:variable(., @id/string())) then 'shadow' else ()
-              } {if ($onlyin) then 'only-used' else ()}"
-       id="{f:generate-id(.)}">
+  <div id="{f:generate-id(.)}"
+       class="{string-join($classes, ' ')}">
     <div class="title">
-      <xsl:sequence select="if (@class = 'param')
-                            then 'Param '
-                            else 'Variable '"/>
+      <xsl:sequence select="f:line-link(.)"/>
+      <xsl:sequence
+          select="if (@class = 'param') then 'Param ' else 'Variable '"/>
       <xsl:sequence select="'$'||@name/string()"/>
       <xsl:if test="@static = 'yes'">
         <xsl:text> [static]</xsl:text>
       </xsl:if>
     </div>
 
-    <div class="body">
-      <xsl:if test="f:variable(., @id/string())">
+    <div class="props">
+      <xsl:if test="$shadows">
         <div class="shadows">
+          <span class="marker">⚠</span>
           <xsl:text>Shadows: </xsl:text>
           <xsl:apply-templates select="f:variable(., @id/string())" mode="m:reference"/>
         </div>
       </xsl:if>
 
-      <xsl:call-template name="t:uses"/>
-      <xsl:call-template name="t:calls-functions"/>
-      <xsl:call-template name="t:calls-templates"/>
+      <xsl:call-template name="t:variables-referenced"/>
+      <xsl:call-template name="t:function-calls"/>
+      <xsl:call-template name="t:template-calls"/>
 
-      <xsl:choose>
-        <xsl:when test="$usedby">
-          <div class="usedby">
+      <div class="used-by">
+        <xsl:choose>
+          <xsl:when test="$used-by">
+            <span class="marker"></span>
             <xsl:text>Used by: </xsl:text>
-            <xsl:for-each select="$usedby">
-              <xsl:if test="position() gt 1">, </xsl:if>
-              <xsl:apply-templates select="." mode="m:reference"/>
-            </xsl:for-each>
-          </div>
-        </xsl:when>
-        <xsl:otherwise>
-          <div class="usedby unused">
-            <xsl:text>Unused</xsl:text>
-          </div>
-        </xsl:otherwise>
-      </xsl:choose>
+            <xsl:sequence select="f:reference-list($used-by)"/>
+          </xsl:when>
+          <xsl:otherwise>
+            <span class="marker">☞</span>
+            <span class="unused">Unused</span>
+          </xsl:otherwise>
+        </xsl:choose>
+      </div>
 
-      <xsl:variable name="usedin" select="f:used-in(., $usedby)"/>
-      <xsl:if test="$usedin">
-        <div class="usedin">
+      <xsl:if test="$used-by-modules">
+        <div class="used-in">
+          <span class="marker" title="Only used in one other module">
+            <xsl:if test="$used-only-elsewhere">☝</xsl:if>
+          </span>
           <xsl:text>Used in: </xsl:text>
-          <xsl:for-each select="$usedin">
+          <xsl:for-each select="$used-by-modules">
             <xsl:if test="position() gt 1">, </xsl:if>
             <a href="#{f:generate-id(.)}">
               <xsl:sequence select="@href/string()"/>
@@ -447,42 +590,112 @@
 </xsl:template>
 
 <xsl:template match="a:template">
-  <xsl:variable name="refs" select="if (@name) then key('trefs', @id) else ()"/>
-  <xsl:variable name="callers"
-                select="$refs/ancestor::*[parent::a:stylesheet][1]"/>
-  <xsl:variable name="caller-ids"
-                select="distinct-values($callers ! generate-id(.))"/>
+  <xsl:variable name="this" select="."/>
 
-  <div class="{local-name(.)}{
-              if (@name and empty($caller-ids)) then ' not-used' else ()}"
-       id="{f:generate-id(.)}">
+  <xsl:variable name="used-by" as="element()*">
+    <xsl:if test="@name">
+      <xsl:for-each select="key('trefs', @id)">
+        <xsl:variable name="t" select="f:template(., @ref/string())"/>
+        <xsl:if test="exists($t) and $t is $this">
+          <xsl:sequence select="$this"/>
+        </xsl:if>
+      </xsl:for-each>
+    </xsl:if>
+  </xsl:variable>
+
+  <!-- remove dups -->
+  <xsl:variable name="used-by" select="$used-by union ()"/>
+
+  <xsl:variable name="used-by-modules"
+                select="$used-by/parent::* union ()"/>
+
+  <xsl:variable name="used-only-elsewhere"
+                select="count($used-by-modules) = 1
+                        and not(parent::* is $used-by-modules)"/>
+
+  <xsl:variable name="shadows"
+                select="if (@name) then f:template-shadows(., @id/string()) else ()"/>
+
+  <xsl:variable name="classes" as="xs:string+">
+    <xsl:sequence select="'instruction'"/>
+    <xsl:sequence select="local-name(.)"/>
+    <xsl:sequence select="if ($shadows) then 'shadows' else ()"/>
+    <xsl:sequence select="if (@name and empty($used-by)) then 'unused' else ()"/>
+    <xsl:sequence select="if ($used-only-elsewhere) then 'elsewhere' else ()"/>
+  </xsl:variable>
+
+  <div id="{f:generate-id(.)}"
+       class="{string-join($classes, ' ')}">
     <div class="title">
+      <xsl:sequence select="f:line-link(.)"/>
       <xsl:text>Template </xsl:text>
-      <xsl:sequence select="@name/string()"/>
+      <xsl:choose>
+        <xsl:when test="@name">
+          <xsl:sequence select="@name/string()"/>
+        </xsl:when>
+        <xsl:when test="@match and string-length(@match) gt 30">
+          <xsl:sequence select="'match ≅ ' || substring(@match, 1, 30) || '…'"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:sequence select="'match ≅ ' || @match/string()"/>
+        </xsl:otherwise>
+      </xsl:choose>
+
+      <xsl:if test="@as">
+        <xsl:sequence select="' as ' || @as"/>
+      </xsl:if>
+
+      <xsl:if test=". intersect $used-by">
+        <xsl:text> </xsl:text>
+        <span class="recursive" title="Recursive template">♻</span>
+      </xsl:if>
     </div>
 
-    <div class="body">
-      <xsl:call-template name="t:uses"/>
-      <xsl:call-template name="t:calls-functions"/>
-      <xsl:call-template name="t:calls-templates"/>
+    <div class="props">
+      <xsl:if test="$shadows">
+        <div class="shadows">
+          <span class="marker">⚠</span>
+          <xsl:text>Shadows: </xsl:text>
+          <xsl:apply-templates select="f:template-shadows(., @id/string())"
+                               mode="m:reference"/>
+        </div>
+      </xsl:if>
+
+      <xsl:call-template name="t:variables-referenced"/>
+      <xsl:call-template name="t:function-calls"/>
+      <xsl:call-template name="t:template-calls">
+        <xsl:with-param name="calls" select="$used-by/self::a:template except ."/>
+      </xsl:call-template>
 
       <xsl:if test="@name">
-        <xsl:choose>
-          <xsl:when test="exists($caller-ids)">
-            <xsl:text>Used by: </xsl:text>
-            <xsl:for-each select="$caller-ids">
-              <xsl:variable name="id" select="."/>
-              <xsl:variable name="caller" select="($callers[generate-id(.) = $id])[1]"/>
-              <xsl:if test="position() gt 1">, </xsl:if>
-              <xsl:apply-templates select="$caller" mode="m:reference"/>
-            </xsl:for-each>
-          </xsl:when>
-          <xsl:otherwise>
-            <div class="usedby unused">
-              <xsl:text>Unused</xsl:text>
-            </div>
-          </xsl:otherwise>
-        </xsl:choose>
+        <div class="used-by">
+          <xsl:choose>
+            <xsl:when test="$used-by">
+              <span class="marker"></span>
+              <xsl:text>Used by: </xsl:text>
+              <xsl:sequence select="f:reference-list($used-by)"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <span class="marker">☞</span>
+              <span class="unused">Unused</span>
+            </xsl:otherwise>
+          </xsl:choose>
+        </div>
+      </xsl:if>
+
+      <xsl:if test="$used-by-modules">
+        <div class="used-in">
+          <span class="marker" title="Only used in one other module">
+            <xsl:if test="$used-only-elsewhere">☝</xsl:if>
+          </span>
+          <xsl:text>Used in: </xsl:text>
+          <xsl:for-each select="$used-by-modules">
+            <xsl:if test="position() gt 1">, </xsl:if>
+            <a href="#{f:generate-id(.)}">
+              <xsl:sequence select="@href/string()"/>
+            </a>
+          </xsl:for-each>
+        </div>
       </xsl:if>
 
       <xsl:if test="@mode">
@@ -520,26 +733,22 @@
 
 <!-- ============================================================ -->
 
-<xsl:function name="f:uses" as="element(a:variable-ref)*">
+<xsl:function name="f:variables-referenced" as="element(a:variable)*">
   <xsl:param name="node" as="element()"/>
 
-  <xsl:for-each select="$node//a:variable-ref">
-    <xsl:sequence select="if (key('vars', @ref))
-                          then .
-                          else ()"/>
-  </xsl:for-each>
+  <xsl:variable name="vars"
+                select="$node//a:variable-ref ! key('vars', @ref)"/>
+
+  <xsl:variable name="vars"
+                select="$vars ! f:variable($node, @id)"/>
+
+  <xsl:sequence select="$vars union ()"/> 
 </xsl:function>
 
-<xsl:template name="t:uses">
-  <xsl:variable name="uses" select="f:uses(.)"/>
-  <xsl:variable name="vars" as="element(a:variable)*">
-    <xsl:for-each select="$uses">
-      <xsl:variable name="var" select="f:variable(., @ref)"/>
-      <xsl:if test="$var/parent::a:stylesheet">
-        <xsl:sequence select="$var"/>
-      </xsl:if>
-    </xsl:for-each>
-  </xsl:variable>
+<xsl:template name="t:variables-referenced">
+  <!-- I only care about references to "global" variables -->
+  <xsl:variable name="vars"
+                select="f:variables-referenced(.)[parent::a:stylesheet]"/>
 
   <xsl:if test="$vars">
     <div class="uses">
@@ -547,21 +756,23 @@
       <xsl:for-each select="$vars">
         <xsl:sort select="@name"/>
         <xsl:if test="position() gt 1">, </xsl:if>
-        <a href="#{f:generate-id(.)}">
-          <xsl:sequence select="'$'||@name/string()"/>
-        </a>
+        <xsl:apply-templates select="." mode="m:reference"/>
       </xsl:for-each>
     </div>
   </xsl:if>
 </xsl:template>
 
-<xsl:function name="f:calls-functions" as="element(a:function)*">
+<xsl:function name="f:function-calls" as="element(a:function)*">
   <xsl:param name="node" as="element()"/>
-  <xsl:sequence select="$node//a:function-call ! key('functions', @ref)"/>
+
+  <xsl:variable name="funcs"
+                select="$node//a:function-call ! key('functions', @ref)"/>
+
+  <xsl:sequence select="$funcs union ()"/>
 </xsl:function>
 
-<xsl:template name="t:calls-functions">
-  <xsl:param name="calls" select="f:calls-functions(.)"/>
+<xsl:template name="t:function-calls">
+  <xsl:param name="calls" select="f:function-calls(.)"/>
 
   <xsl:if test="$calls">
     <div class="calls">
@@ -575,32 +786,41 @@
   </xsl:if>
 </xsl:template>
 
-<xsl:function name="f:calls-templates" as="element(a:call-template)*">
+<xsl:function name="f:template-calls" as="element(a:template)*">
   <xsl:param name="node" as="element()"/>
-  <xsl:variable name="calls" select="$node//a:call-template"/>
-  <xsl:for-each select="distinct-values($calls/@ref/string())">
-    <xsl:variable name="id" select="."/>
-    <xsl:sequence select="$calls[@ref = $id][1]"/>
-  </xsl:for-each>
+
+  <xsl:variable name="temps"
+                select="$node//a:call-template ! key('templates', @ref)"/>
+
+  <xsl:sequence select="$temps union ()"/>
 </xsl:function>
 
-<xsl:template name="t:calls-templates">
-  <xsl:variable name="calls" select="f:calls-templates(.)"/>
+<xsl:template name="t:template-calls">
+  <xsl:param name="calls" select="f:template-calls(.)"/>
 
   <xsl:if test="$calls">
     <div class="calls">
       <xsl:text>Calls: </xsl:text>
       <xsl:for-each select="$calls">
         <xsl:sort select="@name"/>
-        <xsl:variable name="def" select="key('templates', @ref)"/>
         <xsl:if test="position() gt 1">, </xsl:if>
-        <xsl:apply-templates select="$def[1]" mode="m:reference"/>
+        <xsl:apply-templates select="." mode="m:reference"/>
       </xsl:for-each>
     </div>
   </xsl:if>
 </xsl:template>
 
 <!-- ============================================================ -->
+
+<xsl:function name="f:reference-list">
+  <xsl:param name="refs" as="element()+"/>
+
+  <xsl:for-each select="$refs">
+    <xsl:sort select="@name"/>
+    <xsl:if test="position() gt 1">, </xsl:if>
+    <xsl:apply-templates select="." mode="m:reference"/>
+  </xsl:for-each>
+</xsl:function>
 
 <xsl:template match="*" mode="m:reference">
   <a href="#{f:generate-id(.)}" class="error">
@@ -622,7 +842,7 @@
   <a href="#{f:generate-id(.)}">
     <xsl:sequence select="substring-before(@name/string(), '#')"/>
     <xsl:if test="count($fdefs) gt 1">
-      <sup><xsl:sequence select="substring-after(@name/string(), '#')"/></sup>
+      <xsl:sequence select="'#' || substring-after(@name/string(), '#')"/>
     </xsl:if>
     <xsl:text>()</xsl:text>
   </a>
@@ -660,7 +880,7 @@
 
 <!-- ============================================================ -->
 
-<xsl:function name="f:variable" as="element()?">
+<xsl:function name="f:variable" as="element(a:variable)?">
   <xsl:param name="context" as="element()"/>
   <xsl:param name="ref" as="xs:string"/>
 
@@ -682,34 +902,78 @@
 
 <!-- ============================================================ -->
 
-<xsl:function name="f:used-in" as="element()*">
+<xsl:function name="f:template" as="element(a:template)?">
   <xsl:param name="context" as="element()"/>
-  <xsl:param name="nodes" as="element()*"/>
+  <xsl:param name="ref" as="xs:string"/>
+  <xsl:sequence select="fp:template($context, $ref, false())"/>
+</xsl:function>
 
-  <xsl:variable name="context"
-                select="$context/ancestor::a:stylesheet[1]"/>
+<xsl:function name="f:template-shadows" as="element(a:template)?">
+  <xsl:param name="context" as="element()"/>
+  <xsl:param name="ref" as="xs:string"/>
+  <xsl:sequence select="fp:template($context, $ref, true())"/>
+</xsl:function>
 
-<!--
-  <xsl:variable name="stylesheets" as="element(a:stylesheet)*">
-    <xsl:for-each select="$nodes">
-      <xsl:variable name="ss" select="ancestor::a:stylesheet[1]"/>
-      <xsl:if test="not($ss is $context)">
-        <xsl:sequence select="$ss"/>
-      </xsl:if>
-    </xsl:for-each>
-  </xsl:variable>
--->
+<xsl:function name="fp:template" as="element(a:template)?">
+  <xsl:param name="context" as="element()"/>
+  <xsl:param name="ref" as="xs:string"/>
+  <xsl:param name="only-shadows" as="xs:boolean"/>
 
-  <xsl:variable name="stylesheets" as="element(a:stylesheet)*"
-                select="$nodes/ancestor::a:stylesheet[1]"/>
-
-  <xsl:for-each select="distinct-values($stylesheets ! generate-id(.))">
-    <xsl:variable name="id" select="."/>
-    <xsl:sequence select="($stylesheets[generate-id(.) = $id])[1]"/>
-  </xsl:for-each>
+  <xsl:choose>
+    <xsl:when test="$context/preceding-sibling::a:template[@id=$ref]">
+      <xsl:sequence select="$context/preceding-sibling::a:template[@id=$ref][1]"/>
+    </xsl:when>
+    <xsl:when test="$context/self::a:stylesheet">
+      <xsl:choose>
+        <xsl:when test="$context/preceding::a:stylesheet/a:template[@id=$ref]">
+          <xsl:sequence
+              select="($context/preceding::a:stylesheet/a:template[@id=$ref])[last()]"/>
+        </xsl:when>
+        <xsl:when test="not($only-shadows)">
+          <xsl:sequence
+              select="(root($context)//a:stylesheet/a:template[@id=$ref])[last()]"/>
+         </xsl:when>
+        <xsl:otherwise>
+          <xsl:sequence select="()"/>
+        </xsl:otherwise>
+      </xsl:choose>
+    </xsl:when>
+    <xsl:when test="empty($context)">
+      <xsl:sequence select="()"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:sequence select="fp:template($context/parent::*, $ref, $only-shadows)"/>
+    </xsl:otherwise>
+  </xsl:choose>
 </xsl:function>
 
 <!-- ============================================================ -->
+<xsl:function name="f:line-link" as="element(h:span)?">
+  <xsl:param name="node" as="element()"/>
+
+  <span class="link">
+    <xsl:if test="string($source-listings) = ('1','true','yes')
+                  and $node/@a:line-number">
+      <xsl:attribute name="title" select="'Line ' || $node/@a:line-number/string()"/>
+      <a href="#line-{generate-id($node/ancestor::a:stylesheet[1])}-{$node/@a:line-number}"
+         class="goto-lno">
+        <xsl:text>§</xsl:text>
+      </a>
+    </xsl:if>
+  </span>
+</xsl:function>
+
+<xsl:function name="f:notes">
+  <xsl:param name="notes" as="element(h:span)*"/>
+  <xsl:if test="$notes">
+    <xsl:text> (</xsl:text>
+    <xsl:for-each select="$notes">
+      <xsl:if test="position() gt 1">, </xsl:if>
+      <xsl:sequence select="."/>
+    </xsl:for-each>
+    <xsl:text>)</xsl:text>
+  </xsl:if>
+</xsl:function>
 
 <xsl:function name="f:generate-id" as="xs:string">
   <xsl:param name="ref" as="element()"/>

@@ -13,6 +13,8 @@
 <xsl:output method="xhtml" encoding="utf-8" indent="yes"
             omit-xml-declaration="yes"/>
 
+<xsl:param name="source-listings" select="'true'"/>
+
 <xsl:template match="/">
   <xsl:variable name="analyzed">
     <xsl:apply-templates select="/" mode="m:analyze"/>

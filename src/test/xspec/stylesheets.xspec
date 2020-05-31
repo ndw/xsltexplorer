@@ -3,7 +3,7 @@
                xmlns:a="http://nwalsh.com/ns/xslt/analysis"
                xmlns:m="http://nwalsh.com/ns/xslt/modes"
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-               stylesheet="../../main/xslt/xsltexplorer.xsl">
+               stylesheet="../../../build/xslt/explorer.xsl">
 
 <x:scenario label="When analyzing an xsl:stylesheet">
   <x:context mode="m:analyze">

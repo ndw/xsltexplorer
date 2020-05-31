@@ -3,10 +3,15 @@
                xmlns:a="http://nwalsh.com/ns/xslt/analysis"
                xmlns:m="http://nwalsh.com/ns/xslt/modes"
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-               stylesheet="../../main/xslt/xsltexplorer.xsl">
+               stylesheet="../../../build/xslt/explorer.xsl">
+
+<!-- only used in for v,t,f -->
+<!-- unused v,t,f -->
+<!-- shadowed v,t,f -->
 
 <x:import href="stylesheets.xspec"/>
 <x:import href="templates.xspec"/>
+<x:import href="functions.xspec"/>
 <x:import href="variables.xspec"/>
 <x:import href="expressions.xspec"/>
 

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:dc="http://purl.org/dc/terms/"
+                xmlns:a="http://nwalsh.com/ns/xslt/analysis"
                 xmlns:f="http://nwalsh.com/ns/xslt/functions"
                 xmlns:m="http://nwalsh.com/ns/xslt/modes"
                 xmlns:p="xpath-31"
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns="http://nwalsh.com/ns/xslt/analysis"
                 default-mode="m:analyze"
-                exclude-result-prefixes="dc f m p xs"
+                exclude-result-prefixes="a f m p xs"
                 version="3.0">
 
 <xsl:import href="xpath-31.xslt"/>
@@ -28,13 +28,18 @@
 
 <xsl:template match="xsl:stylesheet|xsl:transform">
   <xsl:param name="href" as="xs:string?" select="()"/>
+  <xsl:param name="extra-attributes" as="attribute()*" select="()"/>
 
   <stylesheet uri="{resolve-uri(base-uri(.))}">
     <xsl:copy-of select="namespace::*[local-name(.) != '']"/>
     <xsl:if test="$href">
       <xsl:attribute name="href" select="$href"/>
     </xsl:if>
-    <xsl:apply-templates select="@*,*"/>
+    <xsl:sequence select="if (exists($extra-attributes))
+                          then $extra-attributes
+                          else f:source-location(.)"/>
+    <xsl:apply-templates select="@*"/>
+    <xsl:apply-templates select="*"/>
   </stylesheet>
 </xsl:template>
 
@@ -44,11 +49,14 @@
     <xsl:message select="'Importing', @href/string(), '…'"/>
     <xsl:apply-templates select="doc(resolve-uri(@href, base-uri(.)))/*">
       <xsl:with-param name="href" select="@href"/>
+      <xsl:with-param name="extra-attributes"
+                      select="f:source-location(.)"/>
     </xsl:apply-templates>
   </xsl:if>
 </xsl:template>
 
 <xsl:template match="xsl:include">
+  <!-- this is possibly a bit crude and may not yield good results -->
   <xsl:message select="'Including', @href/string(), '…'"/>
   <xsl:apply-templates select="doc(resolve-uri(@href, base-uri(.)))/*/*"/>
 </xsl:template>
@@ -86,7 +94,7 @@
   </xsl:variable>
 
   <template>
-    <xsl:copy-of select="@name,@priority"/>
+    <xsl:copy-of select="@name,@priority,@as"/>
     <xsl:if test="exists($mode)">
       <xsl:attribute name="mode" select="$mode"/>
     </xsl:if>
@@ -96,6 +104,7 @@
     <xsl:if test="@name">
       <xsl:attribute name="id" select="f:clark-name(@name)"/>
     </xsl:if>
+    <xsl:sequence select="f:source-location(.)"/>
     <xsl:apply-templates select="@*"/>
     <xsl:apply-templates/>
   </template>
@@ -107,6 +116,8 @@
   <function id="{f:clark-name(@name)}#{count(xsl:param)}"
             noarity-id="{f:clark-name(@name)}"
             name="{@name}#{count(xsl:param)}">
+    <xsl:sequence select="f:source-location(.)"/>
+    <xsl:copy-of select="@as"/>
     <xsl:apply-templates select="@*"/>
     <xsl:for-each select="xsl:param">
       <param>
@@ -124,6 +135,7 @@
     <xsl:copy-of select="@name,@static"/>
     <xsl:attribute name="id" select="f:clark-name(@name)"/>
     <xsl:copy-of select="namespace::*[local-name(.) != '']"/>
+    <xsl:sequence select="f:source-location(.)"/>
     <xsl:apply-templates select="@*"/>
     <xsl:apply-templates/>
   </variable>
@@ -134,6 +146,7 @@
 
   <call-template ref="{f:clark-name(@name)}">
     <xsl:copy-of select="@name"/>
+    <xsl:sequence select="f:source-location(.)"/>
     <xsl:apply-templates select="@*"/>
     <xsl:apply-templates/>
   </call-template>
@@ -162,26 +175,24 @@
       <xsl:attribute name="to" select="string-join($to,'|')"/>
     </xsl:if>
     <xsl:copy-of select="@name,@mode"/>
+    <xsl:sequence select="f:source-location(.)"/>
     <xsl:apply-templates select="@*"/>
     <xsl:apply-templates/>
   </apply-templates>
 </xsl:template>
 
-<xsl:template match="dc:*">
-  <xsl:copy>
-    <xsl:copy-of select="@*"/>
-    <xsl:value-of select="."/>
-  </xsl:copy>
-</xsl:template>
-
 <xsl:template match="element()">
-  <xsl:apply-templates select="@*,*"/>
+  <xsl:apply-templates select="@*"/>
+  <xsl:apply-templates/>
 </xsl:template>
 
 <xsl:template match="@select[namespace-uri(parent::*)
                              ='http://www.w3.org/1999/XSL/Transform']
                      |xsl:if/@test
-                     |xsl:when/@test">
+                     |xsl:when/@test
+                     |xsl:evaluate/@context-item
+                     |xsl:evaluate/@xpath
+                     |xsl:template/@match">
   <xsl:sequence select="f:parse-expr(parent::*, .)"/>
 </xsl:template>
 
@@ -195,6 +206,8 @@
 </xsl:template>
 
 <xsl:template match="text()|comment()|processing-instruction()"/>
+
+<!-- ============================================================ -->
 
 <xsl:function name="f:process-avts">
   <xsl:param name="context" as="element()"/>
@@ -313,6 +326,20 @@
       <xsl:sequence select="'{}' || $name"/>
     </xsl:otherwise>
   </xsl:choose>
+</xsl:function>
+
+<xsl:function name="f:source-location" as="attribute()*">
+  <xsl:param name="context" as="node()"/>
+
+  <xsl:if xmlns:saxon="http://saxon.sf.net/"
+          use-when="function-available('saxon:line-number')"
+          test="saxon:line-number($context) gt 0">
+    <xsl:attribute name="a:line-number" select="saxon:line-number($context)"/>
+    <xsl:if use-when="function-available('saxon:column-number')"
+            test="saxon:column-number($context) gt 0">
+      <xsl:attribute name="a:column-number" select="saxon:column-number($context)"/>
+    </xsl:if>
+  </xsl:if>
 </xsl:function>
 
 </xsl:stylesheet>

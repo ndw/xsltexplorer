@@ -1,23 +1,12 @@
-/* DocBook.css */
+/* XSLT Explorer CSS */
 
 :root {
-    --table-border-style: 1px solid black;
-    --numbered-separator-style: 1px solid #dfdfdf;
-    --numbered-number-color: #dfdfdf;
-    --numbered-background-color: #f0f0f0;
-    --verbatim-odd-background-color: #f4f4f4;
-    --verbatim-even-background-color: inherit;
-    --sidebar-background-color: #f0f0f0;
     --border-grey: #afafaf;
+    --border-note: #ffaf7f;
+    --border-warn: #ff7f7f;
     --body-font: "Noto Serif", serif;
     --title-font: "Noto Sans", sans-serif;
     --mono-font: "B612 Mono", monospace;
-    --revadded-before: "<ins>";
-    --revadded-after: "</ins>";
-    --revchanged-before: "<chg>";
-    --revchanged-after: "</chg>";
-    --revdeleted-before: "<del>";
-    --revdeleted-after: "</del>";
     max-width: 70rem;
     background-color: #fffff8;
 }
@@ -47,6 +36,19 @@ body {
     margin-right: 1rem;
 }
 
+.details {
+    margin-top: 3rem;
+    border-top: 2px solid var(--border-grey);
+}
+
+h1,h2,h3,h4,h5,h6 {
+    font-family: var(--title-font);
+    font-weight: bold;
+}
+
+.toc {
+}
+
 .toc ul {
     list-style: none;
     margin-top: 0;
@@ -58,33 +60,42 @@ body {
     padding-left: 2rem;
 }
 
+.toc > ul {
+    display: none;
+    margin-bottom: 1em;
+    padding-left: 2em;
+}
+
+.lot dl,
+.lof dl {
+    margin-top: 0;
+    padding-left: 2rem;
+    display: none;
+}
+
 a, a:visited {
-    color: blue;
+    color: inherit;
     text-decoration: none;
+    border-bottom: 1px solid var(--border-grey);
 }
 
-div.stylesheet + div {
+.goto-lno {
+    border-bottom: none;
 }
 
-div.stylesheet div.stylesheet {
+.stylesheet {
+    margin-bottom: 2rem;
+}
+
+.stylesheet .stylesheet {
     padding-left: 1rem;
     border-left: 2px solid var(--border-grey);
     border-top-left-radius: 1rem;
     border-bottom-left-radius: 1rem;
+    padding-bottom: 0.5rem;
 }
 
-.instructions > div {
-    display: none;
-    margin-top: 1em;
-    border-left: 1px solid var(--border-grey);
-    border-top-left-radius: 0.5rem;
-    border-bottom-left-radius: 0.5rem;
-}
-
-.forceshow div {
-    display: block;
-}
-
+.props,
 .body {
     padding-left: 2rem;
 }
@@ -92,34 +103,94 @@ div.stylesheet div.stylesheet {
 .title {
     padding-left: 1rem;
     font-weight: bold;
-    font-family: var(--title-font);
+}
+
+.marker {
+    display: inline-block;
+    width: 1.5rem;
+    text-indent: 0;
+}
+
+.title .link {
+    display: inline-block;
+    width: 1rem;
+}
+
+.instructions > .body {
+    padding-left: 0;
+}
+
+.instructions .title {
+    padding-left: 0;
+}
+
+.instructions > .body > div {
+    display: none;
+    margin-top: 1em;
+}
+
+.instructions .instruction {
+    border-left: 1px solid var(--border-grey);
+    border-top-left-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+    margin-bottom: 1em;
+}
+
+.instructions .instruction.not-used {
+    border-left: 1px solid var(--border-note);
+}
+
+.instructions .instruction.shadows {
+    border-left: 2px solid var(--border-warn);
+}
+
+.instruction .title {
+    padding-left: 1rem;
 }
 
 span.unused,
-span.onlyused,
-span.shadow {
-    border-bottom: 1px solid #ff0000;
+span.elsewhere,
+span.shadows {
+    border-bottom: 1px solid var(--border-warn);
 }
 
-div.unused,
-div.onlyused {
-    background-color: #ffdfaf;
+/* ============================================================ */
+
+div.used-by {
+    padding-left: 1.5rem;
+    text-indent: -3rem;
+}
+
+div.used-in {
+    padding-left: 1.5rem;
+    text-indent: -3rem;
 }
 
 div.shadows {
-    background-color: #ffdfdf;
+    padding-left: 1.5rem;
+    text-indent: -3rem;
 }
 
+.instruction.shadows {
+    margin-left: inherit;
+}
+
+/* ============================================================ */
+
+.columns {
+    column-count: 3;
+}
+
+/* ============================================================ */
+
 .toc span,
-.module-title,
-.unused-functions,
-.onlyused-functions,
-.onlyused-variables,
-.unused-templates,
-.unused-variables,
-.unused-params,
-.unused-vars,
-.shadow-variables {
+.lot span,
+.lof span,
+.instructions .title,
+.source-code .title,
+span.unused,
+span.elsewhere,
+span.shadowsd {
     cursor: pointer;
 }
 
@@ -131,7 +202,39 @@ div.shadows {
     content: "⏷";
 }
 
-.toc > ul {
+.source-code > .body {
+    padding-left: 0;
+}
+
+.source-code > .body > div {
+    padding-left: 0;
     display: none;
 }
 
+.source-code .title {
+    padding-left: 0;
+}
+
+.source-code .lno {
+    display: none;
+}
+
+.fake-prism {
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    padding-top: 1em;
+    margin-top: 0.5em;
+    font-size: 1em;
+    line-height: 1.5;
+}
+
+@media screen and (max-width: 640px) {
+    .columns {
+        column-count: 2;
+    }
+}
+
+@media screen and (max-width: 400px) {
+    .columns {
+        column-count: 1;
+    }
+}

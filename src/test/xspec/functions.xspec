@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+               xmlns:a="http://nwalsh.com/ns/xslt/analysis"
+               xmlns:m="http://nwalsh.com/ns/xslt/modes"
+               xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+               stylesheet="../../../build/xslt/explorer.xsl">
+
+<x:scenario label="When analyzing a function">
+  <x:context mode="m:analyze">
+    <xsl:function name="a:test"/>
+  </x:context>
+  <x:expect label="expect the name on the function">
+    <a:function name="a:test#0"
+                id="{{http://nwalsh.com/ns/xslt/analysis}}test#0"
+                noarity-id="{{http://nwalsh.com/ns/xslt/analysis}}test"/>
+  </x:expect>
+</x:scenario>
+
+<x:scenario label="When analyzing a function">
+  <x:context mode="m:analyze">
+    <xsl:function name="a:test" as="xs:integer"/>
+  </x:context>
+  <x:expect label="expect the return type on the function">
+    <a:function name="a:test#0"
+                id="{{http://nwalsh.com/ns/xslt/analysis}}test#0"
+                noarity-id="{{http://nwalsh.com/ns/xslt/analysis}}test"
+                as="xs:integer"/>
+  </x:expect>
+</x:scenario>
+
+</x:description>

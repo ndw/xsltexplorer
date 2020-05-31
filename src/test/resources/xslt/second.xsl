@@ -3,6 +3,7 @@
                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns:a="http://example.com/second"
                 xmlns:b="http://example.com/first"
+                xmlns:t="http://example.com/third"
                 exclude-result-prefixes="xs"
                 version="2.0">
 
@@ -20,6 +21,7 @@
 </xsl:template>
 
 <xsl:template name="a:bar">
+  <xsl:sequence select="t:third-function()"/>
 </xsl:template>
 
 <xsl:function name="a:f" as="xs:integer">

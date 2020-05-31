@@ -13,6 +13,10 @@ repositories {
   mavenCentral()
 }
 
+configurations {
+  saxonee
+}
+
 configurations.all {
   resolutionStrategy {
     force 'xml-apis:xml-apis:1.4.01'
@@ -20,6 +24,7 @@ configurations.all {
 }
 
 dependencies {
+  saxonee fileTree(dir: "lib/${saxonVersion}").include("*.jar")
   implementation (
     [group: 'net.sf.saxon', name: 'Saxon-HE', version: saxonVersion],
   )
@@ -57,9 +62,32 @@ def gitRef() {
   ref
 }
 
-def EXCP="${projectDir}/buildSrc/build/classes/java/main"
+
+def heAvailable=true
+def eeAvailable=false
+def peAvailable=false
+configurations.saxonee.each { it ->
+  eeAvailable = eeAvailable || it.toString().contains("saxon-ee")
+  peAvailable = peAvailable || it.toString().contains("saxon-pe")
+}
 configurations.compileClasspath.each { it ->
-  EXCP += ":" + it
+  eeAvailable = eeAvailable || it.toString().contains("saxon-ee")
+  peAvailable = peAvailable || it.toString().contains("saxon-pe")
+}
+
+// This is all a complete hack that I worked out by trial and error
+def EXCP=""
+def EXCPSEP=""
+if (saxonEE != "false" && (eeAvailable || peAvailable)) {
+  configurations.saxonee.each { it ->
+    EXCP += EXCPSEP + it
+    EXCPSEP = ":"
+  }
+} else {
+  configurations.compileClasspath.each { it ->
+    EXCP += EXCPSEP + it
+    EXCPSEP = ":"
+  }
 }
 
 task configureEnvironment() {
@@ -121,7 +149,8 @@ fileTree(dir: "src/test/resources/xslt", include: "*.xsl").each { xsl ->
     outputs.file("${buildDir}/${outName}")
     commandLine "java", "-cp", EXCP, "net.sf.saxon.Transform",
                 xsl.toString(),
-                "-xsl:${buildDir}/xslt/xsltexplorer.xsl",
+                "-xsl:${buildDir}/xslt/explorer.xsl",
+                "-l",
                 "-o:${buildDir}/${outName}"
   }
 
@@ -132,7 +161,7 @@ fileTree(dir: "src/test/resources/xslt", include: "*.xsl").each { xsl ->
     outputs.file("src/test/resources/expected/${base}.html")
     commandLine "java", "-cp", EXCP, "net.sf.saxon.Transform",
                 xsl.toString(),
-                "-xsl:${buildDir}/xslt/xsltexplorer.xsl",
+                "-xsl:${buildDir}/xslt/explorer.xsl",
                 "-o:src/test/resources/expected/${base}.html"
   }
 }
@@ -148,7 +177,7 @@ fileTree(dir: "src/test/xspec").each { xspec ->
   }
 
   def taskname = base.replace("-", "_") + ".xspec"
-  Task t = task "${taskname}"(type: Exec, dependsOn: ['setupXSpec']) {
+  Task t = task "${taskname}"(type: Exec, dependsOn: ['setupXSpec', 'makeXslt']) {
     inputs.files fileTree(dir: "src/main/xslt")
     inputs.files fileTree(dir: "src/test/xspec")
     inputs.files fileTree(dir: "src/test/resources")
@@ -165,11 +194,12 @@ fileTree(dir: "src/test/xspec").each { xspec ->
 // self-reference
 task ouroboros(type: Exec, dependsOn: ['copyResources', 'makeXslt']) {
   inputs.files fileTree(dir: "src/main/xslt")
-  outputs.file("${buildDir}/xsltexplorer.html")
+  outputs.file("${buildDir}/explorer.html")
   commandLine "java", "-cp", EXCP, "net.sf.saxon.Transform",
-              "${buildDir}/xslt/xsltexplorer.xsl",
-              "-xsl:${buildDir}/xslt/xsltexplorer.xsl",
-              "-o:${buildDir}/xsltexplorer.html"
+              "${buildDir}/xslt/explorer.xsl",
+              "-xsl:${buildDir}/xslt/explorer.xsl",
+              "-l",
+              "-o:${buildDir}/explorer.html"
 }
 
 task copyResources(type: Copy) {
@@ -198,8 +228,8 @@ task makeVersion(type: SaxonXsltTask) {
   }
 }
 
-task makeXslt(type: Copy, dependsOn: ['makeVersion']) {
-  outputs.file("${buildDir}/xslt/xsltexplorer.xsl")
+task makeXslt(type: Copy, dependsOn: ['makeVersion', 'copyResources']) {
+  outputs.file("${buildDir}/xslt/explorer.xsl")
   from "src/main/xslt"
   into "${buildDir}/xslt"
 }

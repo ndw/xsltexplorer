@@ -1,4 +1,4 @@
-/* */
+/* XSLT Explorer JS */
 
 document.querySelectorAll("a").forEach(function(anchor) {
   anchor.onclick = function () {
@@ -6,68 +6,63 @@ document.querySelectorAll("a").forEach(function(anchor) {
   };
 });
 
-document.querySelectorAll(".toc span").forEach(function(span) {
-  span.onclick = function () {
-    toggleToC(span);
+[".toc span", ".lot span", ".lof span"].forEach(function(sel) {
+  document.querySelectorAll(sel).forEach(function(span) {
+    span.onclick = function () {
+      toggleToC(span);
+    };
+  });
+});
+
+document.querySelectorAll(".title.closed").forEach(function(title) {
+  title.onclick = function() {
+    toggleBody(title);
   };
 });
 
-document.querySelectorAll(".module-title").forEach(function(title) {
-  title.onclick = function () {
-    toggleInstructions(title);
-  };
-});
-
-["variable", "param", "function", "template"].forEach(function(cname) {
-  let sel = ".unused-" + cname + "s";
-  document.querySelectorAll(sel).forEach(function(span) {
-    span.onclick = function () {
-      toggleUnused(span, cname, 'not-used');
-    };
-  });
-
-  sel = ".onlyused-" + cname + "s";
-  document.querySelectorAll(sel).forEach(function(span) {
-    span.onclick = function () {
-      toggleUnused(span, cname, 'only-used');
-    };
-  });
-
-  if (cname === "variable") {
-    sel = ".shadow";
-    document.querySelectorAll(sel).forEach(function(span) {
-      span.onclick = function () {
-        toggleUnused(span, cname, 'shadow');
-      };
+["unused", "shadows", "elsewhere"].forEach(function(note) {
+  document.querySelectorAll("span."+note).forEach(function(span) {
+    let itype = null;
+    span.classList.forEach(function(cname) {
+      if (cname !== note) {
+        itype = cname;
+      }
     });
-  }
+    span.onclick = function() {
+      const div = span.parentNode.parentNode.parentNode;
+      if (div && div.classList.contains("stylesheet")) {
+        toggleInstructions(div, [itype, note]);
+      }
+    };
+  });
 });
 
 /* ============================================================ */
 
 function toggleToC(span) {
   const div = span.parentNode;
-  const ul = div.querySelector("ul");
+  let list = div.querySelector("ul");
+  if (!list) {
+    list = div.querySelector("dl");
+  }
 
   if (span.classList.contains('closed')) {
     span.classList.replace('closed', 'open');
-    ul.style.display = "block";
+    list.style.display = "block";
   } else {
     span.classList.replace('open', 'closed');
-    ul.style.display = "none";
+    list.style.display = "none";
   }
 };
 
-function toggleInstructions(title) {
+function toggleBody(title) {
   const div = title.parentNode;
-  const body = div.querySelectorAll(":scope > .instructions").forEach(function(idiv) {
-    idiv.querySelectorAll(":scope > div").forEach(function(vdiv) {
-      if (title.classList.contains('closed')) {
-        vdiv.style.display = "block";
-      } else {
-        vdiv.style.display = "none";
-      }
-    });
+  div.querySelectorAll(".body > div").forEach(function(idiv) {
+    if (title.classList.contains('closed')) {
+      idiv.style.display = "block";
+    } else {
+      idiv.style.display = "none";
+    }
   });
 
   if (title.classList.contains('closed')) {
@@ -77,28 +72,42 @@ function toggleInstructions(title) {
   }
 };
 
-function toggleUnused(span, cname, sel) {
-  console.log("Toggle unused:", cname, sel);
-  let div = span.parentNode.parentNode.parentNode;
-  div.querySelectorAll(":scope > .instructions").forEach(function(idiv) {
-    idiv.querySelectorAll(`${'div.' + cname}`).forEach(function(vdiv) {
-      if (vdiv.classList.contains(sel)) {
-        if (vdiv.style.display === "block") {
-          vdiv.style.display = "none";
-        } else {
-          vdiv.style.display = "block";
-        }
-      }
+function toggleInstructions(div, classes) {
+  const root = div.querySelector(":scope > .instructions");
+  root.querySelectorAll(".body > div").forEach(function(div) {
+    let match = true;
+    classes.forEach(function(name) {
+      match = match && div.classList.contains(name);
     });
+    if (match) {
+      const style = window.getComputedStyle(div);
+      if (style.display === "none") {
+        div.style.display = "block";
+      } else {
+        div.style.display = "none";
+      }
+    }
   });
 };
 
 function checkVisible(anchor) {
+  const regex = /^line-[0-9a-fA-F]+-[0-9]+$/;
+
   if (anchor.getAttribute("href").startsWith("#")) {
     const id = anchor.getAttribute("href").substring(1);
+    let llink = id.match(regex);
     let target = document.querySelector("#"+id);
 
     while (target instanceof HTMLElement) {
+      // Side-effect: if it's a link to a line in source,
+      // display the line number.
+      if (llink !== null) {
+        const lno = target.querySelectorAll(":scope > .lno").forEach(function(span) {
+          span.style.display = "inline";
+        });
+        llink = null;
+      }
+
       const style = window.getComputedStyle(target);
       if (style.display === "none") {
         if (target.tagName === "SPAN") {
