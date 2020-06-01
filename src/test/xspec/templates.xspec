@@ -6,7 +6,7 @@
                stylesheet="../../../build/xslt/explorer.xsl">
 
 <x:scenario label="When analyzing a named xsl:template">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template name="test"/>
   </x:context>
   <x:expect label="expect the name on the template">
@@ -15,7 +15,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing an xsl:template without a name">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template/>
   </x:context>
   <x:expect label="expect the name to be absent the template">
@@ -24,7 +24,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing an xsl:template without a mode">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template mode="testmode"/>
   </x:context>
   <x:expect label="expect the mode on the template">
@@ -33,7 +33,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing an xsl:template without an explicit mode">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:stylesheet default-mode="a:testdef">
       <xsl:template/>
     </xsl:stylesheet>
@@ -46,7 +46,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing a match xsl:template">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template match="a[parent::foo]|b"/>
   </x:context>
   <x:expect label="expect the simplified match on the template">
@@ -55,7 +55,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing a named with a match xsl:template">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template name="test" match="a[parent::foo]|b"/>
   </x:context>
   <x:expect label="expect the name and simplified match on the template">
@@ -64,7 +64,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing a call-template">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template>
       <xsl:call-template name="x:foo" xmlns:x="http://example.com/"/>
     </xsl:template>
@@ -78,7 +78,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing an xsl:template without a priority">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template priority="75"/>
   </x:context>
   <x:expect label="expect the priority to be preserved">

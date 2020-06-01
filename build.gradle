@@ -162,13 +162,15 @@ fileTree(dir: "src/test/resources/xslt", include: "*.xsl").each { xsl ->
     commandLine "java", "-cp", EXCP, "net.sf.saxon.Transform",
                 xsl.toString(),
                 "-xsl:${buildDir}/xslt/explorer.xsl",
-                "-o:src/test/resources/expected/${base}.html"
+                "-o:src/test/resources/expected/${base}.xml",
+                "format=data",
+                "source-listings=false",
+                "xspec-tests=true"
   }
 }
 
 // Generate tasks to run each set of XSpec tests
-fileTree(dir: "src/test/xspec").each { xspec ->
-  // Work out the base filename of the test
+fileTree(dir: "src/test/xspec").each { xspec ->  // Work out the base filename of the test
   def base = xspec.toString()
   def pos = base.indexOf("/test/xspec/")
   if (pos > 0) {

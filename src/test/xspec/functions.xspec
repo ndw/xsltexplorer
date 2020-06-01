@@ -6,7 +6,7 @@
                stylesheet="../../../build/xslt/explorer.xsl">
 
 <x:scenario label="When analyzing a function">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:function name="a:test"/>
   </x:context>
   <x:expect label="expect the name on the function">
@@ -17,7 +17,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing a function">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:function name="a:test" as="xs:integer"/>
   </x:context>
   <x:expect label="expect the return type on the function">

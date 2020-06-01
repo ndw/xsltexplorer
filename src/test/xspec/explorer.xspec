@@ -5,14 +5,68 @@
                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                stylesheet="../../../build/xslt/explorer.xsl">
 
-<!-- only used in for v,t,f -->
-<!-- unused v,t,f -->
-<!-- shadowed v,t,f -->
+<x:param name="source-listings" select="'false'"/>
+<x:param name="format" select="'data'"/>
+<x:param name="xspec-tests" select="'true'"/>
 
-<x:import href="stylesheets.xspec"/>
-<x:import href="templates.xspec"/>
-<x:import href="functions.xspec"/>
-<x:import href="variables.xspec"/>
-<x:import href="expressions.xspec"/>
+<x:scenario label="When analyzing first.xsl">
+  <x:context href="../../../src/test/resources/xslt/first.xsl"/>
+  <x:expect label="expect templates to be analyzed correctly"
+            href="../../../src/test/resources/expected/first.xml"/>
+</x:scenario>
+
+<x:scenario label="When analyzing second.xsl">
+  <x:context href="../../../src/test/resources/xslt/second.xsl"/>
+  <x:expect label="expect templates to be analyzed correctly"
+            href="../../../src/test/resources/expected/second.xml"/>
+</x:scenario>
+
+<x:scenario label="When analyzing third.xsl">
+  <x:context href="../../../src/test/resources/xslt/third.xsl"/>
+  <x:expect label="expect templates to be analyzed correctly"
+            href="../../../src/test/resources/expected/third.xml"/>
+</x:scenario>
+
+<x:scenario label="When analyzing identity.xsl">
+  <x:context href="../../../src/test/resources/xslt/identity.xsl"/>
+  <x:expect label="expect it to be analyzed correctly"
+            href="../../../src/test/resources/expected/identity.xml"/>
+</x:scenario>
+
+<x:scenario label="When analyzing template.xsl">
+  <x:context href="../../../src/test/resources/xslt/template.xsl"/>
+  <x:expect label="expect templates to be analyzed correctly"
+            href="../../../src/test/resources/expected/template.xml"/>
+</x:scenario>
+
+<x:scenario label="When analyzing function.xsl">
+  <x:context href="../../../src/test/resources/xslt/function.xsl"/>
+  <x:expect label="expect functions to be analyzed correctly"
+            href="../../../src/test/resources/expected/function.xml"/>
+</x:scenario>
+
+<x:scenario label="When analyzing variable.xsl">
+  <x:context href="../../../src/test/resources/xslt/variable.xsl"/>
+  <x:expect label="expect variables to be analyzed correctly"
+            href="../../../src/test/resources/expected/variable.xml"/>
+</x:scenario>
+
+<x:scenario label="When analyzing onlyin.xsl">
+  <x:context href="../../../src/test/resources/xslt/onlyin.xsl"/>
+  <x:expect label="expect only-ins to be analyzed correctly"
+            href="../../../src/test/resources/expected/onlyin.xml"/>
+</x:scenario>
+
+<x:scenario label="When analyzing shadow.xsl">
+  <x:context href="../../../src/test/resources/xslt/shadow.xsl"/>
+  <x:expect label="expect templates to be analyzed correctly"
+            href="../../../src/test/resources/expected/shadow.xml"/>
+</x:scenario>
+
+<x:scenario label="When analyzing test.xsl">
+  <x:context href="../../../src/test/resources/xslt/test.xsl"/>
+  <x:expect label="expect templates to be analyzed correctly"
+            href="../../../src/test/resources/expected/test.xml"/>
+</x:scenario>
 
 </x:description>

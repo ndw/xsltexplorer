@@ -7,24 +7,57 @@
                 version="3.0">
 
 <xsl:import href="VERSION.xsl"/>
+<xsl:import href="parse.xsl"/>
+<xsl:import href="resolve.xsl"/>
 <xsl:import href="analyze.xsl"/>
 <xsl:import href="summarize.xsl"/>
 
-<xsl:output method="xhtml" encoding="utf-8" indent="yes"
+<xsl:output method="xhtml" encoding="utf-8" indent="no"
             omit-xml-declaration="yes"/>
 
 <xsl:param name="source-listings" select="'true'"/>
 
+<xsl:param name="debug-parse" select="()" static="yes"/>
+<xsl:param name="debug-resolve" select="()" static="yes"/>
+<xsl:param name="debug-analyze" select="()" static="yes"/>
+<xsl:param name="format" select="'visual'"/>
+
 <xsl:template match="/">
-  <xsl:variable name="analyzed">
-    <xsl:apply-templates select="/" mode="m:analyze"/>
+  <xsl:variable name="parsed">
+    <xsl:apply-templates select="/" mode="m:parse"/>
   </xsl:variable>
 
-  <xsl:result-document href="analyzed.xml" method="xml" indent="yes">
+  <xsl:result-document use-when="exists($debug-parse)"
+                       href="{$debug-parse}" method="xml" indent="yes">
+    <xsl:sequence select="$parsed"/>
+  </xsl:result-document>
+
+  <xsl:variable name="resolved">
+    <xsl:apply-templates select="$parsed" mode="m:resolve"/>
+  </xsl:variable>
+
+  <xsl:result-document use-when="exists($debug-resolve)"
+                       href="{$debug-resolve}" method="xml" indent="yes">
+    <xsl:sequence select="$resolved"/>
+  </xsl:result-document>
+
+  <xsl:variable name="analyzed">
+    <xsl:apply-templates select="$resolved" mode="m:analyze"/>
+  </xsl:variable>
+
+  <xsl:result-document use-when="exists($debug-analyze)"
+                       href="{$debug-analyze}" method="xml" indent="yes">
     <xsl:sequence select="$analyzed"/>
   </xsl:result-document>
 
-  <xsl:apply-templates select="$analyzed" mode="m:summarize"/>
+  <xsl:choose>
+    <xsl:when test="$format = 'data'">
+      <xsl:sequence select="$analyzed"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:apply-templates select="$analyzed" mode="m:summarize"/>
+    </xsl:otherwise>
+  </xsl:choose>
 </xsl:template>
 
 </xsl:stylesheet>

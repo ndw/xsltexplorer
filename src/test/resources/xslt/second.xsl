@@ -29,4 +29,13 @@
   <xsl:sequence select="min((0, $num))"/>
 </xsl:function>
 
+<xsl:function name="b:f" as="xs:integer">
+  <xsl:param name="num" as="xs:integer"/>
+  <xsl:sequence select="min((0, $num))"/>
+</xsl:function>
+
+<xsl:function name="t:third-function" as="xs:integer">
+  <xsl:sequence select="0"/>
+</xsl:function>
+
 </xsl:stylesheet>

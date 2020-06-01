@@ -32,4 +32,8 @@
   <xsl:sequence select="5"/>
 </xsl:function>
 
+<xsl:template name="b:foo"/>
+
+<xsl:template name="t:third-template"/>
+
 </xsl:stylesheet>

@@ -6,7 +6,7 @@
                stylesheet="../../../build/xslt/explorer.xsl">
 
 <x:scenario label="When analyzing xsl:stylesheet">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:stylesheet>
       <xsl:variable name="one" select="1"/>
     </xsl:stylesheet>
@@ -19,7 +19,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing xsl:stylesheet">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:stylesheet>
       <xsl:param name="two" select="2"/>
     </xsl:stylesheet>
@@ -32,7 +32,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing variables">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:stylesheet>
       <xsl:variable name="a:one" select="1" xmlns:a="http://example.com/aaaa"/>
       <xsl:param name="b:two" select="b" xmlns:b="http://example.com/bbbb"/>
@@ -47,7 +47,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing a xsl:template with variables">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template>
       <xsl:param name="three" select="3"/>
       <xsl:variable name="four" select="4"/>

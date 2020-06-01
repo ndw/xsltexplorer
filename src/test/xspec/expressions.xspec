@@ -6,7 +6,7 @@
                stylesheet="../../../build/xslt/explorer.xsl">
 
 <x:scenario label="When analyzing a template">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template>
       <xsl:sequence select="a:f()"/>
     </xsl:template>
@@ -20,7 +20,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing a template">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template>
       <xsl:sequence select="$a + 3"/>
     </xsl:template>
@@ -34,7 +34,7 @@
 </x:scenario>
 
 <x:scenario label="When parsing a function call">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template>
       <xsl:sequence select="a:f($a,3)"/>
     </xsl:template>
@@ -50,7 +50,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing a template">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template>
       <xsl:choose>
         <xsl:when select="a:f()"/>
@@ -69,7 +69,7 @@
 </x:scenario>
 
 <x:scenario label="When analyzing a template">
-  <x:context mode="m:analyze">
+  <x:context mode="m:parse">
     <xsl:template>
       <xsl:if select="a:f()"/>
     </xsl:template>

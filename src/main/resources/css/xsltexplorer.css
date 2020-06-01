@@ -34,9 +34,17 @@ body {
     margin-bottom: 0;
     margin-left: 1rem;
     margin-right: 1rem;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    grid-template-columns: 100%;
 }
 
-.details {
+footer {
+    margin-top: 3rem;
+    border-top: 2px solid var(--border-grey);
+}
+
+main > .stylesheet {
     margin-top: 3rem;
     border-top: 2px solid var(--border-grey);
 }
@@ -156,6 +164,7 @@ span.shadows {
 
 /* ============================================================ */
 
+/*
 div.used-by {
     padding-left: 1.5rem;
     text-indent: -3rem;
@@ -174,6 +183,7 @@ div.shadows {
 .instruction.shadows {
     margin-left: inherit;
 }
+*/
 
 /* ============================================================ */
 
@@ -188,6 +198,9 @@ div.shadows {
 .lof span,
 .instructions .title,
 .source-code .title,
+.template.all,
+.variable.all,
+.function.all,
 span.unused,
 span.elsewhere,
 span.shadowsd {
@@ -200,6 +213,10 @@ span.shadowsd {
 
 .open::before {
     content: "⏷";
+}
+
+.halfopen::before {
+    content: "▿";
 }
 
 .source-code > .body {
