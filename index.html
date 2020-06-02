@@ -1,10 +1,241 @@
-<html>
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>XSLT Explorer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link href="https://fonts.googleapis.com/css?family=B612+Mono" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css?family=Noto+Serif" rel="stylesheet" />
+<link rel="stylesheet" href="css/prism.css" />
+<link rel="stylesheet" href="css/xsltexplorer.css" />
+<link rel="schema.dc" href="http://purl.org/dc/elements/1.1/" />
+<meta name="dc.modified" content="2020-06-02T06:12:07Z" />
+<meta name="generator" content="XSLT Explorer 0.1.0 / 6acfe80" />
+<style type="text/css">
+:root {
+    --body-font: "Noto Serif", serif;
+    --title-font: "Noto Sans", sans-serif;
+    --mono-font: "B612 Mono", monospace;
+    max-width: 50rem;
+    background-color: #fffff8;
+}
+html {
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: var(--body-font);
+    line-height: 1.75rem;
+    font-size: 13.5pt;
+}
+
+body {
+    min-height: 100%;
+    padding-top: 0;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    margin-left: 1rem;
+    margin-right: 1rem;
+}
+h1,h2,h3,h4,h5,h6 {
+    font-family: var(--title-font);
+    font-weight: bold;
+}
+header {
+    padding-top: 1rem;
+    margin-bottom: 3rem;
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    opacity: 100%;
+    background-color: #fffff8;
+}
+header img {
+    max-width: 100%;
+}
+footer {
+    margin-bottom: 1rem;
+    margin-top: 3rem;
+    font-size: 80%;
+    border-top: 1px solid #555555;
+}
+dl.narrow dt { float: left; width: 1.75rem; }
+dl.narrow dd { margin-left: 1.75rem; }
+a, a:visited {
+    color: inherit;
+}
+figure {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 1em;
+    border: 2px solid #555555;
+    border-radius: 0.25em;
+}
+</style>
 </head>
 <body>
+<header>
+<img src="img/XsltExplorerHeader.png" alt="[Header Graphic]" />
+</header>
+<main>
 <h1>XSLT Explorer</h1>
-<p>Coming soon.</p>
+
+<p>XSLT Explorer is an XSLT stylesheet that performs a small amount of
+static analysis on an XSLT stylesheet and publishes the results in
+HTML. The idea is that it gives you an overview of the structure of
+your stylesheet.</p>
+
+<p>Explorer identifies templates, functions, and variables within each
+module. It attempts to show you any that are unused, shadowing other
+globals, or are used only once in another module.</p>
+
+<div>
+<h2>Output</h2>
+
+<p>The output from the explorer is a web page. Here’s an example
+(from <code>test.xsl</code> in the test suite):</p>
+
+<figure>
+<img alt="[Screen capture]" src="https://raw.githubusercontent.com/ndw/xsltexplorer/master/src/main/resources/img/xsltexplorer.png"/>
+</figure>
+
+<p>This screen shot shows one parameter, one variable, and two templates.
+Each section shows relevant properties about the declaration: names,
+types, modes, etc., what other declarations refer to it, and what
+declarations it references. Each of the references is a link to the referent.</p>
+
+<p>If line numbers were enabled, § is a link to the declaration in the
+source. If a template or function is recursive, that’s indicated by ♻︎.
+Three noteworthy conditions are identified:</p>
+
+<dl class="narrow">
+<dt>☞</dt>
+<dd>Points out declarations that are unused.</dd>
+<dt>⚠︎</dt>
+<dd>Points out (global) declarations that shadow earlier ones.</dd>
+<dt>☝︎</dt>
+<dd>Points out declarations that are declared in one module but used
+exclusively only in one other module. (Candidates to be moved,
+perhaps?)</dd>
+</dl>
+
+<p>In match templates, the match is indicated as ≅ a list of elements.
+The match attempts to capture the list of elements involved, but all
+predicates are stripped away. (The explorer can’t practically make use
+of them, and removing them simplifies the display.)</p>
+
+<p>An interactive example of the explorer run on itself is online at
+<a href="https://xslt.xmlexplorer.com/ouroboros/">https://xslt.xmlexplorer.com/ouroboros/</a>.</p>
+</div>
+
+<div>
+<h2>Using the explorer</h2>
+
+<ol>
+<li>Download the distribution and unpack it somewhere.</li>
+<li>Transform your stylesheet with <code>xslt/explorer.xsl</code>.</li>
+<li>Point your browser at the output! If you put the output in the
+same directory where you unpacked the distribution, it’ll just work.
+If you want to put it somewhere else, copy the CSS and JS directories
+appropriately.</li>
+</ol>
+
+<p>If you are using <a href="https://www.saxonica.com/">Saxon</a> PE or EE,
+use the `-l` (lowercase “L”) option to include line numbers.</p>
+
+<div>
+<h3>Parameters</h3>
+
+<p>The following parameters control aspects of the output:</p>
+
+<dl>
+<dt><code>source-listings</code></dt>
+<dd>If “false”, the source code listings will not be included. (Default=“true”)
+</dd>
+<dt><code>format</code></dt>
+<dd>The usual output format is an HTML page. Select “data” for a plain
+XML summary of the results. (Default=“html”)</dd>
+</dl>
+
+<p>In addition, there are some debugging flags:</p>
+
+<dl>
+<dt><code>debug-parse</code></dt>
+<dd>If not empty, the intermediate parser output will be stored there.</dd>
+<dt><code>debug-resolve</code></dt>
+<dd>If not empty, the intermediate resolved output will be stored
+there.</dd>
+<dt><code>debug-analyze</code></dt>
+<dd>If not empty, the intermediate analyzed output will be stored
+there.</dd>
+<dt><code>xspec-tests</code></dt>
+<dd>If “true”, a few small tweaks are made to the results so that
+irrelevant differences between the dev environment and the
+<a href="https://app.circleci.com/pipelines/github/ndw/xsltexplorer">CI</a>
+environment don’t cause spurious test failures. (Default=“false”)</dd>
+</dl>
+</div>
+</div>
+
+<div>
+<h2>Caveats</h2>
+
+<ol>
+<li>See the <a href="https://github.com/ndw/xsltexplorer/issues">issues list</a>.
+</li>
+<li>The trick where it links from the instruction to the source code
+depends on having the CSS configured so that the line numbers align
+with the lines in the <a href="https://prismjs.com/">Prism</a> listing.</li>
+<li>The output isn’t especially accessible. A more accessible
+transformation of the “data” output should be possible.</li>
+</ol>
+</div>
+
+<div>
+<h2>How it works</h2>
+
+<p>XSLT is perfectly capable of analyzing the XML structure of your
+stylesheet. To extract information from XPath expressions, it uses an
+XPath 3.1 parser generated by Gunther Rademacher’s always excellent
+<a href="https://www.bottlecaps.de/rex/">REx Parser Generator</a>.</p>
+
+<p>One consequence of doing the XPath parsing in XSLT is that very, very
+large XPath expressions may have quite poor performance. To attempt to
+workaround this, a primitive test is made first: if an expression does
+not contain any “(“ or “$” characters, then it can’t contain any
+function calls or variable references.</p>
+
+<p>The XPath 3.1 parser contains a 60K XPath expression that brings the
+parser to its knees. This quick check avoids that expression.
+If you want to avoid parsing a module entirely,
+stick <code>&lt;?xsltexplorer-skip-import?&gt;</code>
+immediately in front of the import statement
+(or <code>&lt;?xsltexplorer-skip-include?&gt;</code>
+in front of an include statement).</p>
+
+<p>With the XPath parsing sorted, the code takes a multi-pass approach:</p>
+
+<ol>
+<li>Parse the structure, loading imports and includes into a flat
+structure.</li>
+<li>Parse that structure to identify function calls, template calls,
+and variable references.</li>
+<li>For those references, work out what actual instruction they refer
+to, taking into consideration the possibility of shadowing.</li>
+<li>Extract the details of the analysis into a simple XML document.</li>
+<li>Transform that document into HTML.</li>
+</ol>
+</div>
+</main>
+<footer>
+<p>Copyright © 2020 <a href="https://nwalsh.com/">Norman Tovey-Walsh</a>.</p>
+</footer>
 </body>
 </html>
 
