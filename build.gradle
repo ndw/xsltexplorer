@@ -256,12 +256,47 @@ task testXSpec(dependsOn: ["explorer.xspec"]) {
 
 test.dependsOn testXSpec
 
+// ============================================================
+
+task distCopyResources(type: Copy) {
+  from "src/main/resources"
+  include "css/**"
+  include "js/**"
+  into "${buildDir}/xsltexplorer-${xsltExplorerVersion}"
+  doFirst {
+    mkdir "${buildDir}/xsltexplorer-${xsltExplorerVersion}"
+  }
+}
+
+task distCopyXslt(type: Copy, dependsOn: ['makeXslt']) {
+  from "${buildDir}/xslt"
+  into "${buildDir}/xsltexplorer-${xsltExplorerVersion}/xslt"
+  doFirst {
+    mkdir "${buildDir}/xsltexplorer-${xsltExplorerVersion}/xslt"
+  }
+}
+
+task distCopyMisc(type: Copy) {
+  from "."
+  into "${buildDir}/xsltexplorer-${xsltExplorerVersion}"
+  include "README.org"
+  include "LICENSE"
+  doFirst {
+    mkdir "${buildDir}/xsltexplorer-${xsltExplorerVersion}"
+  }
+}
+
+task dist(dependsOn: ['distCopyResources','distCopyMisc','distCopyXslt']) {
+  doLast {
+    println("Built dist for ${xsltExplorerTitle} version ${xsltExplorerVersion}")
+  }
+}
+
+// ============================================================
+
+// This task just exists as a smoke test for my build file
 task helloWorld() {
   doLast {
-    configurations.compileClasspath.each { path ->
-      println(path)
-    }
-
     println('Hello, world.')
   }
 }
