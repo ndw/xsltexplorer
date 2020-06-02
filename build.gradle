@@ -72,6 +72,8 @@ if (saxonEE != "false" && (eeAvailable || peAvailable)) {
   }
 }
 
+// System.getenv().each{ k, v -> println "${k}:${v}" }
+
 // Should we force an XSPec failure to kill the build?
 def CIRCLECI = System.getenv('CIRCLECI') == "true"
 def failOnErrors = CIRCLECI || "true".equals(failOnXSPecErrors)
@@ -286,7 +288,17 @@ task distCopyMisc(type: Copy) {
   }
 }
 
-task dist(dependsOn: ['distCopyResources','distCopyMisc','distCopyXslt']) {
+task zipDist(type: Zip,
+             dependsOn: ['distCopyResources','distCopyMisc','distCopyXslt']) {
+  from("${buildDir}/xsltexplorer-${xsltExplorerVersion}")
+  into "${buildDir}/distributions"
+  archiveFileName = "xsltexplorer-${xsltExplorerVersion}.zip"
+  doFirst {
+    mkdir "${buildDir}/distributions"
+  }
+}
+
+task dist(dependsOn: ['test', 'zipDist']) {
   doLast {
     println("Built dist for ${xsltExplorerTitle} version ${xsltExplorerVersion}")
   }
