@@ -47,11 +47,12 @@ jobs:
     steps:
       - attach_workspace:
           at: ./artifacts
+      - run: ls -lR
       - run:
-          name: "Publish Release ${CIRCLE_TAG} on GitHub"
+          name: "Publish Release on GitHub"
           command: |
             VERSION=${CIRCLE_TAG}
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${VERSION} ./artifacts/
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} ${VERSION} ./artifacts/distributions/
 
 workflows:
   version: 2
