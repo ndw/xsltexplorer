@@ -34,9 +34,6 @@
       <meta name="viewport" content="width=device-width,initial-scale=1" />
       <link rel="shortcut icon" href="https://xslt.xmlexplorer.com/img/icon64.png"
             type="image/png" />
-      <link href="https://fonts.googleapis.com/css?family=B612+Mono" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet" />
-      <link href="https://fonts.googleapis.com/css?family=Noto+Serif" rel="stylesheet" />
       <link rel="stylesheet" href="{$prismcss}"/>
       <link rel="stylesheet" href="{$css}"/>
       <link rel="schema.dc" href="http://purl.org/dc/elements/1.1/"/>
