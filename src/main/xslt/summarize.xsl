@@ -32,6 +32,8 @@
                                    || tokenize(base-uri(/*), '/')[last()]"/>
       </title>
       <meta name="viewport" content="width=device-width,initial-scale=1" />
+      <link rel="shortcut icon" href="https://xslt.xmlexplorer.com/img/icon64.png"
+            type="image/png" />
       <link href="https://fonts.googleapis.com/css?family=B612+Mono" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet" />
       <link href="https://fonts.googleapis.com/css?family=Noto+Serif" rel="stylesheet" />
@@ -47,6 +49,9 @@
     <body>
       <main>
         <h1>
+          <a href="https://xslt.xmlexplorer.com/">
+            <img class="logo" src="https://xslt.xmlexplorer.com/img/logo256.png"/>
+          </a>
           <xsl:sequence select="if (exists($title))
                                 then $title
                                 else $TITLE
