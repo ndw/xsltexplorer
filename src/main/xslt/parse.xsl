@@ -13,8 +13,6 @@
 <?xsltexplorer-skip-import?>
 <xsl:import href="xpath-31.xslt"/>
 
-<xsl:param name="xspec-tests" select="'false'"/>
-
 <xsl:template match="/">
   <xsl:apply-templates/>
 </xsl:template>

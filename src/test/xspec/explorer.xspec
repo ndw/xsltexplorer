@@ -12,61 +12,71 @@
 <x:scenario label="When analyzing first.xsl">
   <x:context href="../../../src/test/resources/xslt/first.xsl"/>
   <x:expect label="expect templates to be analyzed correctly"
-            href="../../../src/test/resources/expected/first.xml"/>
+            href="../../../src/test/resources/expected/first.xml"
+            select="/*"/>
 </x:scenario>
 
 <x:scenario label="When analyzing second.xsl">
   <x:context href="../../../src/test/resources/xslt/second.xsl"/>
   <x:expect label="expect templates to be analyzed correctly"
-            href="../../../src/test/resources/expected/second.xml"/>
+            href="../../../src/test/resources/expected/second.xml"
+            select="/*"/>
 </x:scenario>
 
 <x:scenario label="When analyzing third.xsl">
   <x:context href="../../../src/test/resources/xslt/third.xsl"/>
   <x:expect label="expect templates to be analyzed correctly"
-            href="../../../src/test/resources/expected/third.xml"/>
+            href="../../../src/test/resources/expected/third.xml"
+            select="/*"/>
 </x:scenario>
 
 <x:scenario label="When analyzing identity.xsl">
   <x:context href="../../../src/test/resources/xslt/identity.xsl"/>
   <x:expect label="expect it to be analyzed correctly"
-            href="../../../src/test/resources/expected/identity.xml"/>
+            href="../../../src/test/resources/expected/identity.xml"
+            select="/*"/>
 </x:scenario>
 
 <x:scenario label="When analyzing template.xsl">
   <x:context href="../../../src/test/resources/xslt/template.xsl"/>
   <x:expect label="expect templates to be analyzed correctly"
-            href="../../../src/test/resources/expected/template.xml"/>
+            href="../../../src/test/resources/expected/template.xml"
+            select="/*"/>
 </x:scenario>
 
 <x:scenario label="When analyzing function.xsl">
   <x:context href="../../../src/test/resources/xslt/function.xsl"/>
   <x:expect label="expect functions to be analyzed correctly"
-            href="../../../src/test/resources/expected/function.xml"/>
+            href="../../../src/test/resources/expected/function.xml"
+            select="/*"/>
 </x:scenario>
 
 <x:scenario label="When analyzing variable.xsl">
   <x:context href="../../../src/test/resources/xslt/variable.xsl"/>
   <x:expect label="expect variables to be analyzed correctly"
-            href="../../../src/test/resources/expected/variable.xml"/>
+            href="../../../src/test/resources/expected/variable.xml"
+            select="/*"/>
 </x:scenario>
 
 <x:scenario label="When analyzing onlyin.xsl">
   <x:context href="../../../src/test/resources/xslt/onlyin.xsl"/>
   <x:expect label="expect only-ins to be analyzed correctly"
-            href="../../../src/test/resources/expected/onlyin.xml"/>
+            href="../../../src/test/resources/expected/onlyin.xml"
+            select="/*"/>
 </x:scenario>
 
 <x:scenario label="When analyzing shadow.xsl">
   <x:context href="../../../src/test/resources/xslt/shadow.xsl"/>
   <x:expect label="expect templates to be analyzed correctly"
-            href="../../../src/test/resources/expected/shadow.xml"/>
+            href="../../../src/test/resources/expected/shadow.xml"
+            select="/*"/>
 </x:scenario>
 
 <x:scenario label="When analyzing test.xsl">
   <x:context href="../../../src/test/resources/xslt/test.xsl"/>
   <x:expect label="expect templates to be analyzed correctly"
-            href="../../../src/test/resources/expected/test.xml"/>
+            href="../../../src/test/resources/expected/test.xml"
+            select="/*"/>
 </x:scenario>
 
 </x:description>

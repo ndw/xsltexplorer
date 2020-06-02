@@ -21,6 +21,7 @@
 <xsl:param name="debug-resolve" select="()" static="yes"/>
 <xsl:param name="debug-analyze" select="()" static="yes"/>
 <xsl:param name="format" select="'visual'"/>
+<xsl:param name="xspec-tests" select="'false'"/>
 
 <xsl:template match="/">
   <xsl:variable name="parsed">
@@ -52,12 +53,36 @@
 
   <xsl:choose>
     <xsl:when test="$format = 'data'">
-      <xsl:sequence select="$analyzed"/>
+      <xsl:choose>
+        <xsl:when test="$xspec-tests = ('true','yes','1')">
+          <xsl:apply-templates select="$analyzed" mode="m:fix-base-uri"/>
+        </xsl:when>
+        <xsl:otherwise>
+          <xsl:sequence select="$analyzed"/>
+        </xsl:otherwise>
+      </xsl:choose>
     </xsl:when>
     <xsl:otherwise>
       <xsl:apply-templates select="$analyzed" mode="m:summarize"/>
     </xsl:otherwise>
   </xsl:choose>
+</xsl:template>
+
+<!-- ============================================================ -->
+
+<xsl:template match="element()" mode="m:fix-base-uri">
+  <xsl:copy>
+    <xsl:apply-templates select="@*,node()" mode="m:fix-base-uri"/>
+  </xsl:copy>
+</xsl:template>
+
+<xsl:template match="@xml:base" mode="m:fix-base-uri">
+  <xsl:attribute name="xml:base" select="'...'"/>
+</xsl:template>
+
+<xsl:template match="attribute()|text()|comment()|processing-instruction()"
+              mode="m:fix-base-uri">
+  <xsl:copy/>
 </xsl:template>
 
 </xsl:stylesheet>

@@ -30,24 +30,7 @@ dependencies {
   )
 }
 
-class CheckTextFile extends DefaultTask {
-  @Input
-  String checkFile = null
-
-  @TaskAction
-  def docheck() {
-    def pass = true
-    new File(checkFile).eachLine { line ->
-      if (line.endsWith("failed") && !line.equals("0 failed")) {
-        pass = false
-      }
-      println(line)
-    }
-    if (!pass) {
-      throw new GradleException("Failing tests!")
-    }
-  }
-}
+defaultTasks 'testXSpec'
 
 def gitRef() {
   def ref = ""
@@ -61,7 +44,6 @@ def gitRef() {
   proc.waitFor()
   ref
 }
-
 
 def heAvailable=true
 def eeAvailable=false
@@ -90,9 +72,14 @@ if (saxonEE != "false" && (eeAvailable || peAvailable)) {
   }
 }
 
+// Should we force an XSPec failure to kill the build?
+def CIRCLECI = System.getenv('CIRCLECI') == "true"
+def failOnErrors = CIRCLECI || "true".equals(failOnXSPecErrors)
+
 task configureEnvironment() {
   def envVars = [:]
   envVars['TEST_DIR'] = buildDir
+  envVars['SAXON_CP'] = EXCP
   tasks.withType(Exec) {
     environment << envVars
   }
@@ -109,20 +96,14 @@ downloadXSpec.onlyIf {
   !file("${buildDir}/xspec-${xspecVersion}.zip").exists()
 }
 
-task unzipXSpec(type: Copy, dependsOn: ['downloadXSpec']) {
+task setupXSpec(type: Copy, dependsOn: ['downloadXSpec']) {
   def zipFile = file("${buildDir}/xspec-${xspecVersion}.zip")
   def outputDir = buildDir
   from zipTree(zipFile)
   into outputDir
 }
-unzipXSpec.onlyIf {
+setupXSpec.onlyIf {
   !file("${buildDir}/xspec-${xspecVersion}/README.md").exists()
-}
-
-task setupXSpec(type: Copy, dependsOn: ['unzipXSpec']) {
-  from "src/test/resources/xspec"
-  into "${buildDir}/xspec-${xspecVersion}/bin"
-  include "xspec.sh"
 }
 
 // ============================================================
@@ -146,6 +127,7 @@ fileTree(dir: "src/test/resources/xslt", include: "*.xsl").each { xsl ->
   Task t = task "${outName}"(type: Exec,
                         dependsOn: ['copyResources', 'makeXslt']) {
     inputs.files fileTree(dir: "src/main/xslt")
+    inputs.file(xsl.toString())
     outputs.file("${buildDir}/${outName}")
     commandLine "java", "-cp", EXCP, "net.sf.saxon.Transform",
                 xsl.toString(),
@@ -158,6 +140,7 @@ fileTree(dir: "src/test/resources/xslt", include: "*.xsl").each { xsl ->
   t = task "${expName}"(type: Exec,
                         dependsOn: ['copyResources', 'makeXslt']) {
     inputs.files fileTree(dir: "src/main/xslt")
+    inputs.file(xsl.toString())
     outputs.file("src/test/resources/expected/${base}.html")
     commandLine "java", "-cp", EXCP, "net.sf.saxon.Transform",
                 xsl.toString(),
@@ -179,6 +162,23 @@ fileTree(dir: "src/test/xspec").each { xspec ->  // Work out the base filename o
   }
 
   def taskname = base.replace("-", "_") + ".xspec"
+  if (failOnErrors) {
+    Task t = task "${taskname}"(type: Exec, dependsOn: ['setupXSpec', 'makeXslt']) {
+      inputs.files fileTree(dir: "src/main/xslt")
+      inputs.files fileTree(dir: "src/test/xspec")
+      inputs.files fileTree(dir: "src/test/resources")
+      outputs.files(fileTree(buildDir) {
+        include base + "-result.xml"
+      })
+      errorOutput = new ByteArrayOutputStream()
+      commandLine "${buildDir}/xspec-${xspecVersion}/bin/xspec.sh",
+                  xspec.toString()
+
+      ext.output = {
+        return errorOutput.toString()
+      }
+    }
+  } else {
   Task t = task "${taskname}"(type: Exec, dependsOn: ['setupXSpec', 'makeXslt']) {
     inputs.files fileTree(dir: "src/main/xslt")
     inputs.files fileTree(dir: "src/test/xspec")
@@ -188,6 +188,10 @@ fileTree(dir: "src/test/xspec").each { xspec ->  // Work out the base filename o
     })
     commandLine "${buildDir}/xspec-${xspecVersion}/bin/xspec.sh",
                 xspec.toString()
+    ext.output = {
+      return ""
+      }
+    }
   }
 }
 
@@ -236,8 +240,28 @@ task makeXslt(type: Copy, dependsOn: ['makeVersion', 'copyResources']) {
   into "${buildDir}/xslt"
 }
 
+task testXSpec(dependsOn: ["explorer.xspec"]) {
+  doLast {
+    Task t = tasks.findByName("explorer.xspec")
+    def fail = false
+    t.output().split("\n").each { line ->
+      fail = fail || line.trim().equals("FAILED")
+      println(line)
+    }
+    if (fail) {
+      throw new GradleException("XSpec did not pass")
+    }
+  }
+}
+
+test.dependsOn testXSpec
+
 task helloWorld() {
   doLast {
+    configurations.compileClasspath.each { path ->
+      println(path)
+    }
+
     println('Hello, world.')
   }
 }
