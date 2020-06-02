@@ -8,3 +8,64 @@ your stylesheet.
 Explorer identifies templates, functions, and variables within each
 module. It attempts to show you any that are unused, shadowing other
 globals, or are used only once in another module.
+
+* Output
+
+The output from the explorer is a web page. Here’s an example
+(from ~test.xsl~ in the test suite):
+
+[[file:src/main/resources/img/xsltexplorer.png]]
+
+This screen shot shows one parameter, one variable, and two templates.
+Each section shows relevant properties about the declaration: names,
+types, modes, etc., what other declarations refer to it, and what
+declarations it references. Each of the references is a link to the referent.
+
+If line numbers were enabled, § is a link to the declaration in the
+source. Three noteworthy conditions are identified:
+
++ ☞ :: Points out declarations that are unused.
++ ⚠︎ :: Points out (global) declarations that shadow earlier ones.
++ ☝︎ :: Points out declarations that are declared in one module but
+  used exclusively only in one other module. (Candidates to be moved, perhaps?)
+
+An interactive example of the explorer run on itself is online at
+[[https://xslt.xmlexplorer.com/ouroboros/]].
+
+* Using the explorer
+
+1. Download the distribution and unpack it somewhere.
+2. Transform your stylesheet with ~xslt/explorer.xsl~.
+3. Point your browser at the output! If you put the output in the same
+   directory where you unpacked the distribution, it’ll just work. If
+   you want to put it somewhere else, copy the CSS and JS directories
+   appropriately.
+
+If you are using [[https://www.saxonica.com/welcome/welcome.xml][Saxon]] PE or EE, use the `-l` (lowercase “L”) option to include line
+numbers.
+
+** Parameters
+
+The following parameters control aspects of the output:
+
++ ~source-listings~ :: If “false”, the source code listings will not be included. (Default=“true”)
++ ~format~ :: The usual output format is an HTML page. Select “data” for
+  a plain XML summary of the results. (Default=“html”)
+
+In addition, there are some debugging flags:
+
++ ~debug-parse~ :: If not empty, the intermediate parser output will be stored there.
++ ~debug-resolve~ :: If not empty, the intermediate resolved output will be stored there.
++ ~debug-analyze~ :: If not empty, the intermediate analyzed output will be stored there.
++ ~xspec-tests~ :: If “true”, a few small tweaks are made to the results
+  so that irrelevant differences between the dev environment and the
+  [[https://app.circleci.com/pipelines/github/ndw/xsltexplorer][CI]] environment don’t cause spurious test failures. (Default=“false”)
+
+* Caveats
+
+1. See the [[https://github.com/ndw/xsltexplorer/issues][issues list]].
+2. The trick where it links from the instruction to the source code
+   depends on having the CSS configured so that the line numbers align
+   with the lines in the [[https://prismjs.com/][Prism]] listing.
+3. The output isn’t especially accessible. A more accessible
+   transformation of the “data” output should be possible.
