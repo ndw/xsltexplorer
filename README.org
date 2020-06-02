@@ -1,0 +1,10 @@
+#+TITLE: XSLT Explorer
+
+XSLT Explorer is an XSLT stylesheet that performs a small amount of
+static analysis on an XSLT stylesheet and publishes the results in
+HTML. The idea is that it gives you an overview of the structure of
+your stylesheet.
+
+Explorer identifies templates, functions, and variables within each
+module. It attempts to show you any that are unused, shadowing other
+globals, or are used only once in another module.
