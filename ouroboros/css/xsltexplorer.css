@@ -39,6 +39,10 @@ body {
     grid-template-columns: 100%;
 }
 
+.logo {
+    float: right;
+}
+
 footer {
     margin-top: 3rem;
     border-top: 2px solid var(--border-grey);
@@ -244,6 +248,12 @@ span.shadowsd {
     line-height: 1.5;
 }
 
+@media screen and (max-width: 800px) {
+    .logo {
+        max-width: 128px;
+    }
+}
+
 @media screen and (max-width: 640px) {
     .columns {
         column-count: 2;
@@ -253,5 +263,8 @@ span.shadowsd {
 @media screen and (max-width: 400px) {
     .columns {
         column-count: 1;
+    }
+    .logo {
+        max-width: 64px;
     }
 }
