@@ -3,80 +3,8 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <title>XSLT Explorer</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<link rel="shortcut icon" href="/img/icon64.png"
-      type="image/png" />
-<link href="https://fonts.googleapis.com/css?family=B612+Mono" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css?family=Noto+Serif" rel="stylesheet" />
-<style type="text/css">
-:root {
-    --body-font: "Noto Serif", serif;
-    --title-font: "Noto Sans", sans-serif;
-    --mono-font: "B612 Mono", monospace;
-    max-width: 50rem;
-    background-color: #fffff8;
-}
-html {
-    height: 100%;
-    width: 100%;
-    padding: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    margin-left: auto;
-    margin-right: auto;
-    font-family: var(--body-font);
-    line-height: 1.75rem;
-    font-size: 13.5pt;
-}
-
-body {
-    min-height: 100%;
-    padding-top: 0;
-    padding-left: 0;
-    padding-right: 0;
-    padding-bottom: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-    margin-left: 1rem;
-    margin-right: 1rem;
-}
-h1,h2,h3,h4,h5,h6 {
-    font-family: var(--title-font);
-    font-weight: bold;
-}
-header {
-    padding-top: 0;
-    margin-bottom: 3rem;
-    position: sticky;
-    z-index: 2;
-    top: 0;
-    opacity: 100%;
-}
-header img {
-    max-width: 100%;
-}
-footer {
-    margin-bottom: 1rem;
-    margin-top: 3rem;
-    font-size: 80%;
-    border-top: 1px solid #555555;
-}
-dl.narrow dt { float: left; width: 1.75rem; }
-dl.narrow dd { margin-left: 1.75rem; }
-a, a:visited {
-    color: inherit;
-}
-figure {
-    margin-left: 0;
-    margin-right: 0;
-    padding: 1em;
-    border-top: 2px dashed #555555;
-    border-bottom: 2px dashed #555555;
-    border-left: 2px solid #555555;
-    border-right: 2px solid #555555;
-    border-radius: 0.25em;
-}
-</style>
+<link rel="shortcut icon" href="img/icon64.png" type="image/png" />
+<link rel="stylesheet" href="css/xslt.css" />
 </head>
 <body>
 <header>
@@ -84,6 +12,17 @@ figure {
 </header>
 <main>
 <h1>XSLT Explorer</h1>
+
+<div class="toc">
+<p>Table of Contents</p>
+<ul>
+<li><a href="#output">Output</a></li>
+<li><a href="#getting">Getting the explorer</a></li>
+<li><a href="#using">Using the explorer</a></li>
+<li><a href="#caveats">Caveats</a></li>
+<li><a href="#how">How it works</a></li>
+</ul>
+</div>
 
 <p>XSLT Explorer is an XSLT stylesheet that performs a small amount of
 static analysis on an XSLT stylesheet and publishes the results in
@@ -95,6 +34,7 @@ module. It attempts to show you any that are unused, shadowing other
 globals, or are used only once in another module.</p>
 
 <div>
+<span class="id"><a id="output"> </a></span>
 <h2>Output</h2>
 
 <p>The output from the explorer is a web page. Here’s an example
@@ -134,6 +74,16 @@ of them, and removing them simplifies the display.)</p>
 </div>
 
 <div>
+<span class="id"><a id="getting"> </a></span>
+<h2>Getting the explorer</h2>
+
+<p>You can download <a href="https://github.com/ndw/xsltexplorer/releases/latest">the
+latest</a> release from the <a href="https://github.com/ndw/xsltexplorer/">GitHub project</a>.
+Alternatively, you can clone or fork the project and build it yourself. Share and enjoy!</p>
+</div>
+
+<div>
+<span class="id"><a id="using"> </a></span>
 <h2>Using the explorer</h2>
 
 <ol>
@@ -183,6 +133,7 @@ environment don’t cause spurious test failures. (Default=“false”)</dd>
 </div>
 
 <div>
+<span class="id"><a id="caveats"> </a></span>
 <h2>Caveats</h2>
 
 <ol>
@@ -197,6 +148,7 @@ transformation of the “data” output should be possible.</li>
 </div>
 
 <div>
+<span class="id"><a id="how"> </a></span>
 <h2>How it works</h2>
 
 <p>XSLT is perfectly capable of analyzing the XML structure of your
