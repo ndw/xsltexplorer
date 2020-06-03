@@ -1,4 +1,8 @@
-/* XSLT Explorer JS */
+/* XSLT Explorer JS version 0.1.5.
+ *
+ * See https://xslt.xmlexplorer.com/
+ *
+ */
 
 document.querySelectorAll("a").forEach(function(anchor) {
   anchor.onclick = function () {
@@ -37,7 +41,7 @@ document.querySelectorAll(".title.closed").forEach(function(title) {
   });
 });
 
-["template", "variable", "function"].forEach(function(note) {
+["template", "variable", "function", "param"].forEach(function(note) {
   document.querySelectorAll("span.all."+note).forEach(function(span) {
     span.onclick = function() {
       const div = span.parentNode.parentNode.parentNode;
@@ -150,7 +154,6 @@ function checkVisible(anchor) {
 
       const style = window.getComputedStyle(target);
       if (style.display === "none") {
-        console.log("make visible:", target);
         if (target.tagName === "SPAN") {
           target.style.display = "inline";
         } else { 

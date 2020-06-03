@@ -1,4 +1,12 @@
-/* XSLT Explorer CSS */
+/* XSLT Explorer CSS version 0.1.5.
+ *
+ * See https://xslt.xmlexplorer.com/
+ *
+ */
+
+@import url("https://fonts.googleapis.com/css?family=B612+Mono&display=swap");
+@import url("https://fonts.googleapis.com/css?family=Noto+Sans&display=swap");
+@import url("https://fonts.googleapis.com/css?family=Noto+Serif&display=swap");
 
 :root {
     --border-grey: #afafaf;
@@ -205,6 +213,7 @@ div.shadows {
 .template.all,
 .variable.all,
 .function.all,
+.param.all,
 span.unused,
 span.elsewhere,
 span.shadowsd {
