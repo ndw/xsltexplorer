@@ -58,7 +58,10 @@ workflows:
   version: 2
   check:
     jobs:
-      - build
+      - build:
+          filters:
+            branches:
+              ignore: gh-pages
   deploy:
     jobs:
       - build:
