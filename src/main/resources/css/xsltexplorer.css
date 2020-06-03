@@ -209,6 +209,7 @@ div.shadows {
 .template.all,
 .variable.all,
 .function.all,
+.param.all,
 span.unused,
 span.elsewhere,
 span.shadowsd {

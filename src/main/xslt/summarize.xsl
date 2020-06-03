@@ -155,6 +155,20 @@
     <xsl:variable name="summary" as="element(h:span)*">
       <xsl:sequence select="f:summary-count(@imports, 'import')"/>
       <xsl:sequence select="f:summary-count(@includes, 'include')"/>
+    </xsl:variable>
+
+    <xsl:if test="exists($summary)">
+      <p>
+        <xsl:for-each select="$summary">
+          <xsl:if test="position() gt 1">, </xsl:if>
+          <xsl:sequence select="."/>
+        </xsl:for-each>
+      </p>
+    </xsl:if>
+
+    <xsl:apply-templates select="a:stylesheet"/>
+
+    <xsl:variable name="summary" as="element(h:span)*">
       <xsl:if test="@templates ne '0'">
         <span>
           <xsl:sequence select="f:summary-count(@templates, 'template')"/>
@@ -189,8 +203,6 @@
         </xsl:for-each>
       </p>
     </xsl:if>
-
-    <xsl:apply-templates select="a:stylesheet"/>
 
     <div class="instructions">
       <div class="title closed">Instructions</div>

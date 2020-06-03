@@ -37,7 +37,7 @@ document.querySelectorAll(".title.closed").forEach(function(title) {
   });
 });
 
-["template", "variable", "function"].forEach(function(note) {
+["template", "variable", "function", "param"].forEach(function(note) {
   document.querySelectorAll("span.all."+note).forEach(function(span) {
     span.onclick = function() {
       const div = span.parentNode.parentNode.parentNode;
@@ -97,6 +97,9 @@ function toggleInstructions(div, classes) {
     });
 
     const style = window.getComputedStyle(div);
+
+    console.log(match, style.display, div);
+
     if (match) {
       if (style.display === "none") {
         div.style.display = "block";
