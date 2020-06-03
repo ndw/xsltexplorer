@@ -215,6 +215,14 @@ task copyResources(type: Copy) {
   include "css/**"
   include "js/**"
   into "${buildDir}"
+  filter { String line ->
+    if (line.indexOf("@@") >= 0) {
+      line = line
+        .replace("@@TITLE@@", xsltExplorerTitle)
+        .replace("@@VERSION@@", xsltExplorerVersion)
+    }
+    line
+  }
   doFirst {
     mkdir "${buildDir}"
   }

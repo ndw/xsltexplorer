@@ -1,4 +1,8 @@
-/* XSLT Explorer JS */
+/* @@TITLE@@ JS version @@VERSION@@.
+ *
+ * See https://xslt.xmlexplorer.com/
+ *
+ */
 
 document.querySelectorAll("a").forEach(function(anchor) {
   anchor.onclick = function () {
@@ -97,9 +101,6 @@ function toggleInstructions(div, classes) {
     });
 
     const style = window.getComputedStyle(div);
-
-    console.log(match, style.display, div);
-
     if (match) {
       if (style.display === "none") {
         div.style.display = "block";
@@ -153,7 +154,6 @@ function checkVisible(anchor) {
 
       const style = window.getComputedStyle(target);
       if (style.display === "none") {
-        console.log("make visible:", target);
         if (target.tagName === "SPAN") {
           target.style.display = "inline";
         } else { 
