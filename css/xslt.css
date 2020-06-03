@@ -106,7 +106,7 @@ figure {
     top: -200px;
 }
 
-@media screen and (min-width: 80rem) {
+@media screen and (min-width: 1350px) {
     .toc {
         position: fixed;
         left: 1rem;
