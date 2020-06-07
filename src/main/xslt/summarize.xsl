@@ -63,6 +63,7 @@
           <xsl:sequence select="@functions ! f:summary-count(./string(), 'function')"/>
           <xsl:sequence select="@variables ! f:summary-count(./string(), 'variable')"/>
           <xsl:sequence select="@params ! f:summary-count(./string(), 'param')"/>
+          <xsl:sequence select="@fixmes ! f:summary-count(./string(), 'FIXME: comment')"/>
         </xsl:variable>
 
         <xsl:if test="$details">
@@ -193,6 +194,12 @@
           <xsl:sequence select="f:summary-details(a:params)"/>
         </span>
       </xsl:if>          
+      <xsl:if test="@fixmes ne '0'">
+        <span>
+          <xsl:sequence select="f:summary-count(@fixmes, 'FIXME: comment')"/>
+          <xsl:sequence select="f:summary-details(a:comments)"/>
+        </span>
+      </xsl:if>          
     </xsl:variable>
 
     <xsl:if test="exists($summary)">
@@ -208,9 +215,19 @@
       <div class="title closed">Instructions</div>
       <div class="body">
         <xsl:apply-templates select="a:* except (a:stylesheet|a:variables|a:functions
-                                                 |a:templates|a:params)"/>
+                                                 |a:templates|a:params
+                                                 |a:comments|a:comment)"/>
       </div>
     </div>
+
+    <xsl:if test=".//a:comment except .//a:stylesheet//a:comment">
+      <div class="instructions">
+        <div class="title closed">FIXME: comments</div>
+        <div class="body">
+          <xsl:apply-templates select=".//a:comment except .//a:stylesheet//a:comment"/>
+        </div>
+      </div>
+    </xsl:if>
 
     <xsl:if test="string($source-listings) = ('1','true','yes')">
       <div class="source-code">
@@ -518,6 +535,20 @@
           </xsl:for-each>
         </div>
       </xsl:if>
+    </div>
+  </div>
+</xsl:template>
+
+<xsl:template match="a:comment">
+  <div id="{@id}"
+       class="instruction {@class}">
+    <div class="title">
+      <xsl:sequence select="f:line-link(.)"/>
+      <xsl:text>Comment</xsl:text>
+    </div>
+
+    <div class="props">
+      <xsl:sequence select="string(.)"/>
     </div>
   </div>
 </xsl:template>

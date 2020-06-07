@@ -35,6 +35,8 @@ The match attempts to capture the list of elements involved, but all
 predicates are stripped away. (The explorer can’t practically make use
 of them, and removing them simplifies the display.)
 
+Starting in version 0.1.6, comments containing the string “FIXME:” are also highlighted.
+
 An interactive example of the explorer run on itself is online at
 [[https://xslt.xmlexplorer.com/ouroboros/]].
 

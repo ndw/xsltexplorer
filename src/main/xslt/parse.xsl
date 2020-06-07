@@ -10,8 +10,11 @@
                 exclude-result-prefixes="a f m p xs"
                 version="3.0">
 
+<!-- FIXME: Implement XPath parsing as an extension function. -->
 <?xsltexplorer-skip-import?>
 <xsl:import href="xpath-31.xslt"/>
+
+<xsl:param name="fixme" select="'FIXME:'"/>
 
 <xsl:template match="/">
   <xsl:apply-templates/>
@@ -31,7 +34,7 @@
                           then $extra-attributes
                           else f:source-location(.)"/>
     <xsl:apply-templates select="@*"/>
-    <xsl:apply-templates select="*"/>
+    <xsl:apply-templates/>
   </stylesheet>
 </xsl:template>
 
@@ -40,7 +43,7 @@
                 select="preceding-sibling::node()[not(self::text())][1]"/>
   <xsl:if test="not($pi/self::processing-instruction('xsltexplorer-skip-import'))">
     <xsl:message select="'Importing', @href/string(), '…'"/>
-    <xsl:apply-templates select="doc(resolve-uri(@href, base-uri(.)))/*">
+    <xsl:apply-templates select="doc(resolve-uri(@href, base-uri(.)))/node()">
       <xsl:with-param name="href" select="@href/string()"/>
       <xsl:with-param name="extra-attributes" as="attribute()+">
         <xsl:sequence select="f:source-location(.)"/>
@@ -56,7 +59,7 @@
   <xsl:if test="not(preceding-sibling
                     ::processing-instruction('xsltexplorer-skip-include'))">
     <xsl:message select="'Including', @href/string(), '…'"/>
-    <xsl:apply-templates select="doc(resolve-uri(@href, base-uri(.)))/*">
+    <xsl:apply-templates select="doc(resolve-uri(@href, base-uri(.)))/node()">
       <xsl:with-param name="href" select="@href/string()"/>
       <xsl:with-param name="extra-attributes" as="attribute()+">
         <xsl:sequence select="f:source-location(.)"/>
@@ -230,7 +233,16 @@
   </xsl:if>
 </xsl:template>
 
-<xsl:template match="text()|comment()|processing-instruction()"/>
+<xsl:template match="comment()">
+  <xsl:if test="contains(., $fixme)">
+    <comment id="{f:encode-for-id(f:unique-id(.))}">
+      <xsl:sequence select="f:source-location(.)"/>
+      <xsl:sequence select="string(.)"/>
+    </comment>
+  </xsl:if>
+</xsl:template>
+
+<xsl:template match="text()|processing-instruction()"/>
 
 <!-- ============================================================ -->
 
@@ -325,7 +337,7 @@
 <!-- ============================================================ -->
 
 <xsl:function name="f:unique-id" as="xs:string">
-  <xsl:param name="ref" as="element()"/>
+  <xsl:param name="ref" as="node()"/>
 
   <xsl:variable name="prefix"
                 select="if ($ref/self::xsl:stylesheet)
@@ -341,6 +353,9 @@
     </xsl:when>
     <xsl:when test="$ref/self::xsl:template">
       <xsl:sequence select="$prefix || 't-' || (count($ref/preceding::xsl:template)+1)"/>
+    </xsl:when>
+    <xsl:when test="$ref/self::comment()">
+      <xsl:sequence select="$prefix || 'c-' || (count($ref/preceding::comment())+1)"/>
     </xsl:when>
     <xsl:otherwise>
       <xsl:sequence select="$prefix || generate-id($ref)"/>

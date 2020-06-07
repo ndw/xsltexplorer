@@ -31,6 +31,8 @@
                    select="count(//a:template[parent::a:stylesheet])"/>
     <xsl:attribute name="functions"
                    select="count(//a:function[parent::a:stylesheet])"/>
+    <xsl:attribute name="fixmes"
+                   select="count(//a:comment)"/>
     <xsl:apply-templates/>
   </summary>
 </xsl:template>
@@ -48,6 +50,7 @@
     <xsl:variable name="params" select="a:variable[@class='param']"/>
     <xsl:variable name="templates" select="a:template"/>
     <xsl:variable name="functions" select="a:function"/>
+    <xsl:variable name="fixmes" select=".//a:comment except .//a:stylesheet//a:comment"/>
 
     <xsl:attribute name="imports" select="count($imports)"/>
     <xsl:attribute name="includes" select="count($includes)"/>
@@ -55,6 +58,7 @@
     <xsl:attribute name="params" select="count($params)"/>
     <xsl:attribute name="templates" select="count($templates)"/>
     <xsl:attribute name="functions" select="count($functions)"/>
+    <xsl:attribute name="fixmes" select="count($fixmes)"/>
 
     <xsl:variable name="vp-unused" as="element(a:variable)*"
                   select="a:variable[empty(key('xref', @id))]"/>
@@ -145,6 +149,8 @@
       </xsl:for-each>
     </templates>
 
+    <comments/>
+
     <xsl:variable name="functions-shadow"
                   select="a:function[@name and f:function-shadows(., @name/string())]"/>
 
@@ -190,6 +196,7 @@
     </functions>
 
     <xsl:apply-templates select="a:variable|a:template|a:function|a:stylesheet"/>
+    <xsl:apply-templates select=".//a:comment except .//a:stylesheet//a:comment"/>
   </stylesheet>
 </xsl:template>
 
@@ -380,6 +387,14 @@
       <used-by-module><xsl:sequence select="f:generate-id(.)"/></used-by-module>
     </xsl:for-each>
   </template>
+</xsl:template>
+
+<xsl:template match="a:comment">
+  <comment id="{f:generate-id(.)}"
+           class="comment">
+    <xsl:copy-of select="@line-number,@column-number"/>
+    <xsl:sequence select="normalize-space(.)"/>
+  </comment>
 </xsl:template>
 
 <xsl:function name="f:variables-referenced" as="element(a:variable)*">

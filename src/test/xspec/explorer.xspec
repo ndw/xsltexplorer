@@ -79,4 +79,11 @@
             select="/*"/>
 </x:scenario>
 
+<x:scenario label="When analyzing fixme.xsl">
+  <x:context href="../../../src/test/resources/xslt/fixme.xsl"/>
+  <x:expect label="expect FIXME: comments to be analyzed correctly"
+            href="../../../src/test/resources/expected/fixme.xml"
+            select="/*"/>
+</x:scenario>
+
 </x:description>
