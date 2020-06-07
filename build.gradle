@@ -299,7 +299,7 @@ task distCopyMisc(type: Copy) {
 task zipDist(type: Zip,
              dependsOn: ['distCopyResources','distCopyMisc','distCopyXslt']) {
   from("${buildDir}/xsltexplorer-${xsltExplorerVersion}")
-  into "${buildDir}/distributions"
+  into "xsltexplorer-${xsltExplorerVersion}"
   archiveFileName = "xsltexplorer-${xsltExplorerVersion}.zip"
   doFirst {
     mkdir "${buildDir}/distributions"
