@@ -232,7 +232,9 @@
             class="{string-join($classes, ' ')}"
             recursive="{exists(. intersect $used-by)}"
             elsewhere="{$used-only-elsewhere}">
-    <xsl:copy-of select="@name,@display-name,@id,@as,@line-number,@column-number"/>
+    <xsl:copy-of select="@name,@display-name,@id,@as,@line-number,@column-number,
+                         @visibility,@streamability,@override-extension-function,
+                         @new-each-time,@cache"/>
     <xsl:copy-of select="a:param" copy-namespaces="no"/>
 
     <xsl:for-each select="$shadows">
@@ -362,6 +364,12 @@
             elsewhere="{$used-only-elsewhere}">
     <xsl:copy-of select="@name,@display-name,@match,@as,@mode,@display-mode,
                          @priority,@line-number,@column-number"/>
+
+    <xsl:for-each select="a:param">
+      <param>
+        <xsl:copy-of select="@*"/>
+      </param>
+    </xsl:for-each>
 
     <xsl:for-each select="$shadows">
       <shadow><xsl:sequence select="f:generate-id(.)"/></shadow>

@@ -130,6 +130,11 @@
     </xsl:if>
     <xsl:sequence select="f:source-location(.)"/>
     <xsl:apply-templates select="@*"/>
+    <xsl:for-each select="xsl:param">
+      <param>
+        <xsl:copy-of select="@name,@as"/>
+      </param>
+    </xsl:for-each>
     <xsl:apply-templates/>
   </template>
 </xsl:template>
@@ -142,7 +147,8 @@
             name="{f:clark-name(@name)}#{count(xsl:param)}"
             display-name="{@name}#{count(xsl:param)}">
     <xsl:sequence select="f:source-location(.)"/>
-    <xsl:copy-of select="@as"/>
+    <xsl:copy-of select="@as,@visibility,@streamability,@override-extension-function,
+                         @new-each-time,@cache"/>
     <xsl:apply-templates select="@*"/>
     <xsl:for-each select="xsl:param">
       <param>
