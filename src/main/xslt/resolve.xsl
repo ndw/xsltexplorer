@@ -69,6 +69,7 @@
           <xsl:when test="starts-with(@ref, '{http://www.w3.org/2005/xpath-functions}')
                           or starts-with(@ref, '{http://www.w3.org/2001/XMLSchema}')
                           or starts-with(@ref, '{http://saxon.sf.net/}')
+                          or starts-with(@ref, '{http://www.w3.org/2005/xpath-functions/math}')
                           or starts-with(@ref, '{http://www.w3.org/2005/xpath-functions/array}')
                           or starts-with(@ref, '{http://www.w3.org/2005/xpath-functions/map}')">
             <!-- ignore standard, builtin functions -->
