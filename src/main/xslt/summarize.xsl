@@ -130,6 +130,10 @@
           <xsl:sequence select="format-dateTime($now, '[H01]:[m01]')"/>
           <xsl:text> on </xsl:text>
           <xsl:sequence select="format-dateTime($now, '[D01] [MNn,*-3] [Y0001]')"/>
+          <xsl:text> with </xsl:text>
+          <xsl:sequence select="system-property('xsl:product-name')"/>
+          <xsl:text> version </xsl:text>
+          <xsl:sequence select="system-property('xsl:product-version')"/>
           <xsl:text>.</xsl:text>
         </p>
         <p>
@@ -241,7 +245,7 @@
                   <td valign="top" align="right">
                     <pre class="fake-prism">
                       <xsl:for-each select="tokenize($code,'&#10;')">
-                        <span id="line-{generate-id($stylesheet)}-{position()}">
+                        <span id="line-{$stylesheet/@id}-{position()}">
                           <xsl:choose>
                             <xsl:when test="position() eq 1 or (position() mod 5 = 0)">
                               <xsl:sequence select="position()"/>
@@ -682,7 +686,7 @@
     <xsl:if test="string($source-listings) = ('1','true','yes')
                   and $node/@line-number">
       <xsl:attribute name="title" select="'Line ' || $node/@line-number/string()"/>
-      <a href="#line-{generate-id($node/ancestor::a:stylesheet[1])}-{$node/@line-number}"
+      <a href="#line-{$node/ancestor::a:stylesheet[1]/@id}-{$node/@line-number}"
          class="goto-lno">
         <xsl:text>§</xsl:text>
       </a>
