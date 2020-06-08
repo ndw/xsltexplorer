@@ -3,7 +3,6 @@
  * See https://xslt.xmlexplorer.com/
  *
  */
-
 document.querySelectorAll("a").forEach(function(anchor) {
   anchor.onclick = function () {
     checkVisible(anchor);
@@ -51,6 +50,18 @@ document.querySelectorAll(".title.closed").forEach(function(title) {
     };
   });
 });
+
+// This only runs once, when the page is initially loaded. If there's
+// a fragment identifier, especially if it's a line number, then
+// the reference may not work because that region of the document is
+// not being displayed. Attempt to make the referenced ID visible and
+// then move the cursor there.
+if (window.location.href.indexOf("#") > 0) {
+  const href = window.location.href;
+  const target = href.substring(href.indexOf("#"));
+  makeVisible(target);
+  document.location.href = target;
+}
 
 /* ============================================================ */
 
@@ -133,34 +144,37 @@ function toggleInstructions(div, classes) {
 };
 
 function checkVisible(anchor) {
+  if (anchor.getAttribute("href").startsWith("#")) {
+    makeVisible(anchor.getAttribute("href"));
+  }
+}
+
+function makeVisible(id) {
   const regex = /^#line-[0-9a-fA-F]+-[0-9]+$/;
 
-  if (anchor.getAttribute("href").startsWith("#")) {
-    const id = anchor.getAttribute("href");
-    let llink = id.match(regex);
-    // For reasons I don't understand, this sometimes returns null.
-    // let target = document.querySelector(id);
-    let target = document.getElementById(id.substring(1));
+  let llink = id.match(regex);
+  // For reasons I don't understand, this sometimes returns null.
+  // let target = document.querySelector(id);
+  let target = document.getElementById(id.substring(1));
 
-    while (target instanceof HTMLElement) {
-      // Side-effect: if it's a link to a line in source,
-      // display the line number.
-      if (llink !== null) {
-        const lno = target.querySelectorAll(":scope > .lno").forEach(function(span) {
-          span.style.display = "inline";
-        });
-        llink = null;
-      }
-
-      const style = window.getComputedStyle(target);
-      if (style.display === "none") {
-        if (target.tagName === "SPAN") {
-          target.style.display = "inline";
-        } else { 
-          target.style.display = "block";
-        }
-      }
-      target = target.parentNode;
+  while (target instanceof HTMLElement) {
+    // Side-effect: if it's a link to a line in source,
+    // display the line number.
+    if (llink !== null) {
+      const lno = target.querySelectorAll(":scope > .lno").forEach(function(span) {
+        span.style.display = "inline";
+      });
+      llink = null;
     }
+
+    const style = window.getComputedStyle(target);
+    if (style.display === "none") {
+      if (target.tagName === "SPAN") {
+        target.style.display = "inline";
+      } else { 
+        target.style.display = "block";
+      }
+    }
+    target = target.parentNode;
   }
 }
