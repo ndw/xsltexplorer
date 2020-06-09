@@ -7,6 +7,7 @@ plugins {
 sourceSets { }
 
 import com.github.eerohele.SaxonXsltTask
+import org.gradle.internal.os.OperatingSystem
 
 repositories {
   mavenLocal()
@@ -107,13 +108,16 @@ task setupXSpec(type: Copy, dependsOn: ['downloadXSpec']) {
 setupXSpec.onlyIf {
   !file("${buildDir}/xspec-${xspecVersion}/README.md").exists()
 }
+def xspecCmd = (OperatingSystem.current().isWindows()) ? 
+  "${buildDir}\\xspec-${xspecVersion}\\bin\\xspec.bat" : 
+  "${buildDir}/xspec-${xspecVersion}/bin/xspec.sh"
 
 // ============================================================
 
 // Generate tasks to format each test document
 fileTree(dir: "src/test/resources/xslt", include: "*.xsl").each { xsl ->
   // Work out the base filename of the test
-  def base = xsl.toString()
+  def base = xsl.toString().replace("\\", "/")
   def pos = base.indexOf("/resources/xslt/")
   if (pos > 0) {
     base = base.substring(pos+16)
@@ -156,7 +160,7 @@ fileTree(dir: "src/test/resources/xslt", include: "*.xsl").each { xsl ->
 
 // Generate tasks to run each set of XSpec tests
 fileTree(dir: "src/test/xspec").each { xspec ->  // Work out the base filename of the test
-  def base = xspec.toString()
+  def base = xspec.toString().replace("\\", "/")
   def pos = base.indexOf("/test/xspec/")
   if (pos > 0) {
     base = base.substring(pos+12)
@@ -173,8 +177,7 @@ fileTree(dir: "src/test/xspec").each { xspec ->  // Work out the base filename o
         include base + "-result.xml"
       })
       errorOutput = new ByteArrayOutputStream()
-      commandLine "${buildDir}/xspec-${xspecVersion}/bin/xspec.sh",
-                  xspec.toString()
+      commandLine xspecCmd, xspec.toString()
 
       ext.output = {
         return errorOutput.toString()
@@ -188,8 +191,7 @@ fileTree(dir: "src/test/xspec").each { xspec ->  // Work out the base filename o
     outputs.files(fileTree(buildDir) {
       include base + "-result.xml"
     })
-    commandLine "${buildDir}/xspec-${xspecVersion}/bin/xspec.sh",
-                xspec.toString()
+    commandLine xspecCmd, xspec.toString()
     ext.output = {
       return ""
       }
