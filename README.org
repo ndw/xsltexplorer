@@ -14,7 +14,7 @@ globals, or are used only once in another module.
 The output from the explorer is a web page. Here’s an example
 (from ~test.xsl~ in the test suite):
 
-[[https://raw.githubusercontent.com/ndw/xsltexplorer/master/src/main/resources/img/xsltexplorer.png]]
+[[https://raw.githubusercontent.com/ndw/xsltexplorer/main/src/main/resources/img/xsltexplorer.png]]
 
 This screen shot shows one parameter, one variable, and two templates.
 Each section shows relevant properties about the declaration: names,
